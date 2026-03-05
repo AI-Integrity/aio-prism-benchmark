@@ -1,0 +1,913 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AIO PRISM Benchmark — Multi-Layer Rankings</title>
+  <style>
+    :root,
+    [data-theme="dark"] {
+      --bg: #0f1117;
+      --surface: #1a1d27;
+      --surface2: #22263a;
+      --border: #2e3348;
+      --accent: #5b8af5;
+      --accent2: #7c5bf5;
+      --text: #e8eaf0;
+      --text2: #8b90a8;
+      --text3: #5a5f7a;
+      --radius: 10px;
+      --header-bg: linear-gradient(135deg, #0f1117 0%, #1a1d27 100%);
+      --select-arrow: %238b90a8;
+    }
+
+    [data-theme="light"] {
+      --bg: #f5f6f8;
+      --surface: #ffffff;
+      --surface2: #eef0f4;
+      --border: #d8dbe4;
+      --accent: #3b6fd4;
+      --accent2: #5b3fd4;
+      --text: #1a1d27;
+      --text2: #5a5f7a;
+      --text3: #8b90a8;
+      --header-bg: linear-gradient(135deg, #ffffff 0%, #f0f2f7 100%);
+      --select-arrow: %235a5f7a;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      font-size: 14px;
+      min-height: 100vh;
+    }
+
+    /* ── Header ── */
+    header {
+      background: var(--header-bg);
+      border-bottom: 1px solid var(--border);
+      padding: 20px 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .logo-area h1 {
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: -0.3px;
+    }
+    .logo-area h1 span { color: var(--accent); }
+    .logo-area p {
+      font-size: 12px;
+      color: var(--text2);
+      margin-top: 3px;
+    }
+
+    .header-links {
+      display: flex;
+      align-items: center;
+      gap: 0;
+    }
+    .header-links a {
+      color: var(--text2);
+      text-decoration: none;
+      font-size: 12px;
+      margin-left: 16px;
+      transition: color 0.15s;
+    }
+    .header-links a:hover { color: var(--text); }
+
+    /* ── Layout ── */
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 28px 24px;
+    }
+
+    /* ── Layer Tabs ── */
+    .layer-tabs {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+    .layer-tab {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 10px 20px;
+      font-size: 13px;
+      color: var(--text2);
+      cursor: pointer;
+      transition: all 0.15s;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      min-width: 160px;
+    }
+    .layer-tab:hover { border-color: var(--accent); color: var(--text); }
+    .layer-tab.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+    }
+    .layer-tab .tab-label {
+      font-weight: 700;
+      font-size: 14px;
+    }
+    .layer-tab .tab-desc {
+      font-size: 10px;
+      opacity: 0.7;
+    }
+    .layer-tab.active .tab-desc { opacity: 0.9; }
+
+    /* ── Filter Panel ── */
+    .filter-panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px 24px;
+      margin-bottom: 24px;
+    }
+
+    .filter-panel h2 {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text2);
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      margin-bottom: 16px;
+    }
+
+    .filter-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+      gap: 14px;
+    }
+
+    .filter-group label {
+      display: block;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text3);
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      margin-bottom: 6px;
+    }
+
+    .filter-group select {
+      width: 100%;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+      font-size: 13px;
+      padding: 8px 10px;
+      cursor: pointer;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='var(--select-arrow)'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 10px center;
+      padding-right: 28px;
+      transition: border-color 0.15s;
+    }
+    .filter-group select:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+
+    .filter-summary {
+      margin-top: 14px;
+      padding-top: 14px;
+      border-top: 1px solid var(--border);
+      font-size: 12px;
+      color: var(--text2);
+    }
+    .filter-summary .key-badge {
+      display: inline-block;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 2px 7px;
+      font-family: monospace;
+      font-size: 11px;
+      color: var(--accent);
+      margin-left: 6px;
+    }
+
+    /* ── Results ── */
+    .results-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+    }
+    .results-header h2 {
+      font-size: 15px;
+      font-weight: 700;
+    }
+    .record-count {
+      font-size: 12px;
+      color: var(--text3);
+    }
+
+    /* ── Rankings Card ── */
+    .rankings-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+
+    .rank-row {
+      display: grid;
+      grid-template-columns: 36px 1fr 90px 110px;
+      align-items: center;
+      padding: 13px 20px;
+      border-bottom: 1px solid var(--border);
+      transition: background 0.1s;
+      gap: 12px;
+    }
+    .rank-row:last-child { border-bottom: none; }
+    .rank-row:hover { background: var(--surface2); }
+
+    .rank-num {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text3);
+      text-align: center;
+    }
+    .rank-num.top1 { color: #f5c542; }
+    .rank-num.top2 { color: #b0bec5; }
+    .rank-num.top3 { color: #cd7f32; }
+
+    [data-theme="light"] .rank-num.top1 { color: #b8860b; }
+    [data-theme="light"] .rank-num.top2 { color: #6b7280; }
+    [data-theme="light"] .rank-num.top3 { color: #92400e; }
+
+    .rank-value {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+    .rank-value-name {
+      font-size: 14px;
+      font-weight: 600;
+    }
+    .bar-track {
+      height: 6px;
+      background: var(--surface2);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+    .bar-fill {
+      height: 100%;
+      border-radius: 3px;
+      transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .rank-pct {
+      font-size: 15px;
+      font-weight: 700;
+      text-align: right;
+    }
+
+    .rank-stats {
+      font-size: 11px;
+      color: var(--text3);
+      text-align: right;
+      line-height: 1.5;
+    }
+
+    /* ── All Layers Overview Grid ── */
+    .all-layers-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+      gap: 16px;
+    }
+
+    .layer-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    .layer-card-header {
+      padding: 14px 16px;
+      background: var(--surface2);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .layer-card-header .lch-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text);
+    }
+    .layer-card-header .lch-badge {
+      font-size: 10px;
+      font-weight: 600;
+      background: var(--accent);
+      color: #fff;
+      padding: 2px 8px;
+      border-radius: 10px;
+    }
+    .layer-card-body { padding: 12px 16px; }
+
+    .mini-rank-row {
+      display: flex;
+      align-items: center;
+      padding: 4px 0;
+      gap: 8px;
+    }
+    .mini-rank-num {
+      width: 18px;
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--text3);
+      flex-shrink: 0;
+    }
+    .mini-bar-track {
+      flex: 1;
+      height: 4px;
+      background: var(--surface2);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+    .mini-bar-fill {
+      height: 100%;
+      border-radius: 2px;
+    }
+    .mini-value-name {
+      font-size: 11px;
+      color: var(--text2);
+      width: 155px;
+      flex-shrink: 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .mini-pct {
+      font-size: 11px;
+      font-weight: 600;
+      width: 42px;
+      text-align: right;
+      flex-shrink: 0;
+    }
+
+    /* ── Loading / Error ── */
+    .state-msg {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--text2);
+    }
+    .state-msg .icon { font-size: 32px; margin-bottom: 12px; }
+    .state-msg p { font-size: 14px; }
+    .state-msg code {
+      background: var(--surface2);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 12px;
+    }
+
+    /* ── Footer ── */
+    footer {
+      text-align: center;
+      padding: 32px 20px;
+      font-size: 12px;
+      color: var(--text3);
+      border-top: 1px solid var(--border);
+      margin-top: 40px;
+    }
+    footer a { color: var(--text2); text-decoration: none; }
+    footer a:hover { color: var(--text); }
+
+    /* ── Theme Toggle ── */
+    .theme-toggle {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 6px 14px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--text2);
+      font-size: 12px;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+    .theme-toggle:hover {
+      border-color: var(--accent);
+      color: var(--text);
+    }
+    .theme-toggle .icon { font-size: 14px; }
+
+    /* ── Responsive ── */
+    @media (max-width: 640px) {
+      header { padding: 14px 16px; }
+      .container { padding: 16px 12px; }
+      .filter-grid { grid-template-columns: 1fr 1fr; }
+      .rank-row { grid-template-columns: 28px 1fr 60px; padding: 10px 12px; }
+      .rank-stats { display: none; }
+      .layer-tabs { gap: 4px; }
+      .layer-tab { min-width: 0; padding: 8px 12px; flex: 1; }
+      .all-layers-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo-area">
+    <h1><span>AIO PRISM</span> Benchmark</h1>
+    <p>Multi-layer rankings · L2 Source · L3 Epistemic · L4 Normative · gemini-3.1-flash-lite-preview</p>
+  </div>
+  <div class="header-links">
+    <button class="theme-toggle" id="theme-toggle" title="Toggle light/dark mode">
+      <span class="icon" id="theme-icon">☀️</span>
+      <span id="theme-label">Light</span>
+    </button>
+    <a href="https://aioq.org" target="_blank">aioq.org</a>
+    <a href="https://github.com/AI-Integrity/aio-prism-benchmark" target="_blank">GitHub</a>
+  </div>
+</header>
+
+<div class="container">
+
+  <!-- Layer Tabs -->
+  <div class="layer-tabs">
+    <div class="layer-tab active" data-layer="overview">
+      <span class="tab-label">Overview</span>
+      <span class="tab-desc">All layers at a glance</span>
+    </div>
+    <div class="layer-tab" data-layer="L2">
+      <span class="tab-label">L2 — Source</span>
+      <span class="tab-desc">Who says it? (10 sources)</span>
+    </div>
+    <div class="layer-tab" data-layer="L3">
+      <span class="tab-label">L3 — Epistemic</span>
+      <span class="tab-desc">How do we know? (10 types)</span>
+    </div>
+    <div class="layer-tab" data-layer="L4">
+      <span class="tab-label">L4 — Normative</span>
+      <span class="tab-desc">What matters? (19 values)</span>
+    </div>
+  </div>
+
+  <!-- Filter Panel -->
+  <div class="filter-panel">
+    <h2>Filters</h2>
+    <div class="filter-grid">
+      <div class="filter-group">
+        <label>Dimension</label>
+        <select id="sel-dimension">
+          <option value="by_severity">By Severity × Reversibility</option>
+          <option value="by_scale">By Scale</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label>Domain</label>
+        <select id="sel-domain">
+          <option value="ALL">All Domains</option>
+          <option value="MED">Medical / Bioethics</option>
+          <option value="LAW">Criminal Justice / Law</option>
+          <option value="BIZ">Business / Corporate</option>
+          <option value="DEF">Defense / National Security</option>
+          <option value="EDU">Education / Child Development</option>
+          <option value="CARE">Counseling / Personal Care</option>
+          <option value="TECH">Science / Technology / Environment</option>
+        </select>
+      </div>
+      <div class="filter-group" id="fg-severity">
+        <label>Severity</label>
+        <select id="sel-severity">
+          <option value="ALL">All Severities</option>
+          <optgroup label="Individual scope">
+            <option value="1-1">1-1 · Individual / Reversible</option>
+            <option value="1-2">1-2 · Individual / Partial</option>
+            <option value="1-3">1-3 · Individual / Irreversible</option>
+          </optgroup>
+          <optgroup label="Relational scope">
+            <option value="2-1">2-1 · Relational / Reversible</option>
+            <option value="2-2">2-2 · Relational / Partial</option>
+            <option value="2-3">2-3 · Relational / Irreversible</option>
+          </optgroup>
+          <optgroup label="Group scope">
+            <option value="3-1">3-1 · Group / Reversible</option>
+            <option value="3-2">3-2 · Group / Partial</option>
+            <option value="3-3">3-3 · Group / Irreversible</option>
+          </optgroup>
+          <optgroup label="Societal scope">
+            <option value="4-1">4-1 · Societal / Reversible</option>
+            <option value="4-2">4-2 · Societal / Partial</option>
+            <option value="4-3">4-3 · Societal / Irreversible</option>
+          </optgroup>
+          <optgroup label="Global scope">
+            <option value="5-1">5-1 · Global / Reversible</option>
+            <option value="5-2">5-2 · Global / Partial</option>
+            <option value="5-3">5-3 · Global / Irreversible</option>
+          </optgroup>
+        </select>
+      </div>
+      <div class="filter-group" id="fg-scale" style="display:none;">
+        <label>Scale</label>
+        <select id="sel-scale">
+          <option value="ALL">All Scales</option>
+          <option value="1">1 · Individual</option>
+          <option value="2">2 · Relational</option>
+          <option value="3">3 · Group</option>
+          <option value="4">4 · Societal</option>
+          <option value="5">5 · Global</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label>Time Horizon</label>
+        <select id="sel-time">
+          <option value="ALL">All Time Horizons</option>
+          <option value="1">Immediate (24 h)</option>
+          <option value="2">Short-term (1 yr)</option>
+          <option value="3">Long-term (10+ yr)</option>
+          <option value="4">Permanent / Generational</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label>Variant</label>
+        <select id="sel-variant">
+          <option value="ALL">All Variants</option>
+          <option value="1">Variant A</option>
+          <option value="2">Variant B</option>
+          <option value="3">Variant C</option>
+        </select>
+      </div>
+    </div>
+    <div class="filter-summary">
+      Data key: <span class="key-badge" id="key-display">ALL|ALL|ALL|ALL</span>
+      <span id="sample-count" style="margin-left:12px;"></span>
+    </div>
+  </div>
+
+  <!-- Results -->
+  <div id="results-area">
+    <div class="state-msg">
+      <div class="icon">⏳</div>
+      <p>Loading benchmark data…</p>
+    </div>
+  </div>
+
+</div>
+
+<footer>
+  <p>
+    <a href="https://aioq.org">AI Integrity Organization (AIO)</a> ·
+    <a href="https://github.com/AI-Integrity/aio-prism-benchmark">GitHub</a> ·
+    License: <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>
+  </p>
+</footer>
+
+<script>
+// ─── Constants ───────────────────────────────────────────────────────────────
+
+const DATA_URLS = {
+  L2: 'data/rankings_L2.json',
+  L3: 'data/rankings_L3.json',
+  L4: 'data/rankings_L4.json',
+};
+
+const LAYER_INFO = {
+  L2: { title: 'L2 — Source Authority',    desc: 'Who says it?',        short: 'Source' },
+  L3: { title: 'L3 — Epistemic Quality',   desc: 'How do we know?',     short: 'Epistemic' },
+  L4: { title: 'L4 — Normative Values',    desc: 'What matters?',       short: 'Normative' },
+};
+
+// Color palette per variable (dark-mode text color, gradient for bar)
+const VAR_COLORS = {
+  // ── L2 Source Authority ──
+  'S1-International-body':           { t: '#60a5fa', b: 'linear-gradient(90deg,#2563eb,#3b82f6)' },
+  'S2-Government-regulatory':        { t: '#818cf8', b: 'linear-gradient(90deg,#4338ca,#6366f1)' },
+  'S3-Academic-peer-reviewed':        { t: '#34d399', b: 'linear-gradient(90deg,#047857,#10b981)' },
+  'S4-Industry-corporate':            { t: '#fbbf24', b: 'linear-gradient(90deg,#b45309,#f59e0b)' },
+  'S5-Independent-expert':            { t: '#a78bfa', b: 'linear-gradient(90deg,#6d28d9,#8b5cf6)' },
+  'S6-Mainstream-media':              { t: '#38bdf8', b: 'linear-gradient(90deg,#0369a1,#0ea5e9)' },
+  'S7-Alternative-independent-media': { t: '#fb7185', b: 'linear-gradient(90deg,#be123c,#f43f5e)' },
+  'S8-Community-civil-society':       { t: '#4ade80', b: 'linear-gradient(90deg,#15803d,#22c55e)' },
+  'S9-Direct-stakeholder':            { t: '#22d3ee', b: 'linear-gradient(90deg,#0e7490,#06b6d4)' },
+  'S10-Anonymous-crowdsourced':       { t: '#94a3b8', b: 'linear-gradient(90deg,#475569,#64748b)' },
+  // ── L3 Epistemic Quality ──
+  'E1-Systematic-synthesis':          { t: '#60a5fa', b: 'linear-gradient(90deg,#1d4ed8,#3b82f6)' },
+  'E2-Controlled-experiment':         { t: '#34d399', b: 'linear-gradient(90deg,#047857,#10b981)' },
+  'E3-Statistical-correlational':     { t: '#a78bfa', b: 'linear-gradient(90deg,#6d28d9,#8b5cf6)' },
+  'E4-Causal-mechanistic':            { t: '#fb923c', b: 'linear-gradient(90deg,#c2410c,#f97316)' },
+  'E5-Analogical-comparative':        { t: '#f472b6', b: 'linear-gradient(90deg,#be185d,#ec4899)' },
+  'E6-Case-based':                    { t: '#2dd4bf', b: 'linear-gradient(90deg,#0f766e,#14b8a6)' },
+  'E7-Sign-pattern':                  { t: '#facc15', b: 'linear-gradient(90deg,#a16207,#eab308)' },
+  'E8-Expert-judgment':               { t: '#818cf8', b: 'linear-gradient(90deg,#4338ca,#6366f1)' },
+  'E9-Experiential-qualitative':      { t: '#fb7185', b: 'linear-gradient(90deg,#be123c,#f43f5e)' },
+  'E10-Popular-consensus':            { t: '#94a3b8', b: 'linear-gradient(90deg,#475569,#64748b)' },
+  // ── L4 Normative Values (Schwartz 19) ──
+  'Security-societal':                { t: '#60a5fa', b: 'linear-gradient(90deg,#1d4ed8,#3b82f6)' },
+  'Security-personal':                { t: '#38bdf8', b: 'linear-gradient(90deg,#0369a1,#0ea5e9)' },
+  'Universalism-concern':             { t: '#2dd4bf', b: 'linear-gradient(90deg,#0f766e,#14b8a6)' },
+  'Universalism-nature':              { t: '#34d399', b: 'linear-gradient(90deg,#047857,#10b981)' },
+  'Universalism-tolerance':           { t: '#4ade80', b: 'linear-gradient(90deg,#15803d,#22c55e)' },
+  'Benevolence-caring':               { t: '#22d3ee', b: 'linear-gradient(90deg,#0e7490,#06b6d4)' },
+  'Benevolence-dependability':        { t: '#67e8f9', b: 'linear-gradient(90deg,#155e75,#22d3ee)' },
+  'Self-direction-thought':           { t: '#a78bfa', b: 'linear-gradient(90deg,#6d28d9,#8b5cf6)' },
+  'Self-direction-action':            { t: '#c084fc', b: 'linear-gradient(90deg,#7e22ce,#a855f7)' },
+  'Humility':                         { t: '#818cf8', b: 'linear-gradient(90deg,#4338ca,#6366f1)' },
+  'Conformity-rules':                 { t: '#94a3b8', b: 'linear-gradient(90deg,#475569,#64748b)' },
+  'Conformity-interpersonal':         { t: '#a1a1aa', b: 'linear-gradient(90deg,#52525b,#71717a)' },
+  'Power-resources':                  { t: '#f87171', b: 'linear-gradient(90deg,#b91c1c,#ef4444)' },
+  'Power-dominance':                  { t: '#fb923c', b: 'linear-gradient(90deg,#c2410c,#f97316)' },
+  'Achievement':                      { t: '#fbbf24', b: 'linear-gradient(90deg,#b45309,#f59e0b)' },
+  'Tradition':                        { t: '#d97706', b: 'linear-gradient(90deg,#92400e,#b45309)' },
+  'Stimulation':                      { t: '#f472b6', b: 'linear-gradient(90deg,#be185d,#ec4899)' },
+  'Face':                             { t: '#fb7185', b: 'linear-gradient(90deg,#be123c,#f43f5e)' },
+  'Hedonism':                         { t: '#e879f9', b: 'linear-gradient(90deg,#86198f,#d946ef)' },
+};
+
+// Light-mode text overrides
+const VAR_COLORS_LIGHT = {
+  'S1-International-body': '#1d4ed8', 'S2-Government-regulatory': '#3730a3',
+  'S3-Academic-peer-reviewed': '#047857', 'S4-Industry-corporate': '#92400e',
+  'S5-Independent-expert': '#5b21b6', 'S6-Mainstream-media': '#075985',
+  'S7-Alternative-independent-media': '#9f1239', 'S8-Community-civil-society': '#166534',
+  'S9-Direct-stakeholder': '#155e75', 'S10-Anonymous-crowdsourced': '#334155',
+  'E1-Systematic-synthesis': '#1d4ed8', 'E2-Controlled-experiment': '#047857',
+  'E3-Statistical-correlational': '#5b21b6', 'E4-Causal-mechanistic': '#9a3412',
+  'E5-Analogical-comparative': '#9d174d', 'E6-Case-based': '#115e59',
+  'E7-Sign-pattern': '#854d0e', 'E8-Expert-judgment': '#3730a3',
+  'E9-Experiential-qualitative': '#9f1239', 'E10-Popular-consensus': '#334155',
+  'Security-societal': '#1d4ed8', 'Security-personal': '#075985',
+  'Universalism-concern': '#115e59', 'Universalism-nature': '#047857',
+  'Universalism-tolerance': '#166534', 'Benevolence-caring': '#155e75',
+  'Benevolence-dependability': '#164e63', 'Self-direction-thought': '#5b21b6',
+  'Self-direction-action': '#6b21a8', 'Humility': '#3730a3',
+  'Conformity-rules': '#334155', 'Conformity-interpersonal': '#3f3f46',
+  'Power-resources': '#b91c1c', 'Power-dominance': '#9a3412',
+  'Achievement': '#92400e', 'Tradition': '#78350f',
+  'Stimulation': '#9d174d', 'Face': '#9f1239', 'Hedonism': '#86198f',
+};
+
+function getVarTextColor(varName) {
+  const theme = document.documentElement.getAttribute('data-theme') || 'dark';
+  if (theme === 'light' && VAR_COLORS_LIGHT[varName]) return VAR_COLORS_LIGHT[varName];
+  return VAR_COLORS[varName]?.t || '#8b90a8';
+}
+
+function getVarBarGradient(varName) {
+  return VAR_COLORS[varName]?.b || 'linear-gradient(90deg,#475569,#64748b)';
+}
+
+// Nice display names
+function displayName(varName) {
+  return varName
+    .replace(/^[SE]\d+-/, '')
+    .replace(/-/g, ' ')
+    .replace(/\b\w/g, c => c.toUpperCase());
+}
+
+// ─── State ───────────────────────────────────────────────────────────────────
+
+const layerData = {};  // { L2: {...}, L3: {...}, L4: {...} }
+let activeLayer = 'overview';  // 'overview' | 'L2' | 'L3' | 'L4'
+let loadedCount = 0;
+
+// ─── Load Data ───────────────────────────────────────────────────────────────
+
+async function loadAllData() {
+  const area = document.getElementById('results-area');
+  try {
+    const promises = Object.entries(DATA_URLS).map(async ([layer, url]) => {
+      const res = await fetch(url);
+      if (!res.ok) throw new Error(`${layer}: HTTP ${res.status}`);
+      layerData[layer] = await res.json();
+      loadedCount++;
+      area.innerHTML = `<div class="state-msg"><div class="icon">⏳</div><p>Loading… ${loadedCount}/3 layers</p></div>`;
+    });
+    await Promise.all(promises);
+    render();
+  } catch (e) {
+    area.innerHTML = `
+      <div class="state-msg">
+        <div class="icon">⚠️</div>
+        <p>Could not load data. If viewing locally, serve via HTTP (e.g. <code>python -m http.server</code>).</p>
+        <p style="margin-top:8px;font-size:11px;color:var(--text3)">${e.message}</p>
+      </div>`;
+  }
+}
+
+// ─── Key Builder ─────────────────────────────────────────────────────────────
+
+function buildKey() {
+  const dim    = document.getElementById('sel-dimension').value;
+  const domain = document.getElementById('sel-domain').value;
+  const time   = document.getElementById('sel-time').value;
+  const variant= document.getElementById('sel-variant').value;
+  let midVal;
+  if (dim === 'by_severity') {
+    midVal = document.getElementById('sel-severity').value;
+  } else {
+    midVal = document.getElementById('sel-scale').value;
+  }
+  return `${domain}|${midVal}|${time}|${variant}`;
+}
+
+// ─── Get Rankings for a Layer ────────────────────────────────────────────────
+
+function getRankings(layer) {
+  const data = layerData[layer];
+  if (!data) return null;
+  const dim = document.getElementById('sel-dimension').value;
+  const key = buildKey();
+  const bucket = data[dim];
+  if (!bucket) return null;
+  const rankings = bucket[key];
+  if (!rankings) return null;
+  return [...rankings].sort((a, b) => a.rank - b.rank);
+}
+
+// ─── Render ──────────────────────────────────────────────────────────────────
+
+function render() {
+  const key = buildKey();
+  document.getElementById('key-display').textContent = key;
+
+  const area = document.getElementById('results-area');
+
+  if (activeLayer === 'overview') {
+    renderOverview(area);
+  } else {
+    renderSingleLayer(area, activeLayer);
+  }
+}
+
+function renderSingleLayer(area, layer) {
+  const rankings = getRankings(layer);
+  const info = LAYER_INFO[layer];
+  const meta = layerData[layer]?.meta;
+
+  if (!rankings) {
+    area.innerHTML = `<div class="state-msg"><div class="icon">🔍</div><p>No data for this filter combination.</p></div>`;
+    return;
+  }
+
+  const totalMatchups = rankings.reduce((s, r) => s + r.total, 0);
+  document.getElementById('sample-count').textContent =
+    `${totalMatchups.toLocaleString()} matchups · ${meta?.valid_records?.toLocaleString() || '?'} records`;
+
+  area.innerHTML = `
+    <div class="results-header">
+      <h2>${info.title} — Win-Rate Rankings</h2>
+      <span class="record-count">${rankings.length} variables · ${info.desc}</span>
+    </div>
+    <div class="rankings-card" id="rank-list"></div>
+  `;
+
+  const list = document.getElementById('rank-list');
+  rankings.forEach((entry, i) => {
+    const pct = (entry.win_rate * 100).toFixed(1);
+    const barW = (entry.win_rate * 100).toFixed(2);
+    const numCls = i === 0 ? 'top1' : i === 1 ? 'top2' : i === 2 ? 'top3' : '';
+    const textColor = getVarTextColor(entry.variable);
+    const barGrad = getVarBarGradient(entry.variable);
+    const conf = entry.avg_confidence != null ? (entry.avg_confidence * 100).toFixed(1) + '% conf' : '';
+
+    list.insertAdjacentHTML('beforeend', `
+      <div class="rank-row">
+        <div class="rank-num ${numCls}">#${i + 1}</div>
+        <div class="rank-value">
+          <div class="rank-value-name" style="color:${textColor}">${displayName(entry.variable)}</div>
+          <div class="bar-track">
+            <div class="bar-fill" style="width:${barW}%; background:${barGrad}"></div>
+          </div>
+        </div>
+        <div class="rank-pct" style="color:${textColor}">${pct}%</div>
+        <div class="rank-stats">${entry.wins.toLocaleString()} / ${entry.total.toLocaleString()}<br>${conf}</div>
+      </div>
+    `);
+  });
+}
+
+function renderOverview(area) {
+  const layers = ['L2', 'L3', 'L4'];
+  const totalRecords = layers.reduce((s, l) => s + (layerData[l]?.meta?.valid_records || 0), 0);
+  document.getElementById('sample-count').textContent = `${totalRecords.toLocaleString()} total records across 3 layers`;
+
+  area.innerHTML = `
+    <div class="results-header">
+      <h2>All Layers — Win-Rate Rankings</h2>
+      <span class="record-count">3 layers</span>
+    </div>
+    <div class="all-layers-grid" id="layers-grid"></div>
+  `;
+
+  const grid = document.getElementById('layers-grid');
+
+  layers.forEach(layer => {
+    const rankings = getRankings(layer);
+    const info = LAYER_INFO[layer];
+    const meta = layerData[layer]?.meta;
+
+    const card = document.createElement('div');
+    card.className = 'layer-card';
+    card.innerHTML = `
+      <div class="layer-card-header">
+        <span class="lch-title">${info.title}</span>
+        <span class="lch-badge">${info.desc}</span>
+      </div>
+      <div class="layer-card-body"></div>
+    `;
+    grid.appendChild(card);
+
+    const body = card.querySelector('.layer-card-body');
+
+    if (!rankings) {
+      body.innerHTML = '<div style="padding:12px 0;color:var(--text3);font-size:12px;">No data for this filter.</div>';
+      return;
+    }
+
+    rankings.forEach((entry, i) => {
+      const barW = (entry.win_rate * 100).toFixed(2);
+      const pct  = (entry.win_rate * 100).toFixed(1);
+      const textColor = getVarTextColor(entry.variable);
+      const barGrad = getVarBarGradient(entry.variable);
+
+      body.insertAdjacentHTML('beforeend', `
+        <div class="mini-rank-row">
+          <div class="mini-rank-num">${i + 1}</div>
+          <div class="mini-value-name" style="color:${textColor}" title="${entry.variable}">${displayName(entry.variable)}</div>
+          <div class="mini-bar-track">
+            <div class="mini-bar-fill" style="width:${barW}%; background:${barGrad}"></div>
+          </div>
+          <div class="mini-pct" style="color:${textColor}">${pct}%</div>
+        </div>
+      `);
+    });
+  });
+}
+
+// ─── Event Listeners ─────────────────────────────────────────────────────────
+
+// Layer tabs
+document.querySelectorAll('.layer-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.layer-tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    activeLayer = tab.getAttribute('data-layer');
+    render();
+  });
+});
+
+// Dimension toggle: show/hide severity vs scale
+document.getElementById('sel-dimension').addEventListener('change', () => {
+  const dim = document.getElementById('sel-dimension').value;
+  document.getElementById('fg-severity').style.display = dim === 'by_severity' ? '' : 'none';
+  document.getElementById('fg-scale').style.display    = dim === 'by_scale'    ? '' : 'none';
+  // Reset the hidden one
+  if (dim === 'by_severity') document.getElementById('sel-scale').value = 'ALL';
+  else document.getElementById('sel-severity').value = 'ALL';
+  render();
+});
+
+// All filter changes
+['sel-domain','sel-severity','sel-scale','sel-time','sel-variant'].forEach(id => {
+  document.getElementById(id).addEventListener('change', render);
+});
+
+// ─── Theme Toggle ────────────────────────────────────────────────────────────
+
+function getPreferredTheme() {
+  const saved = localStorage.getItem('aio-prism-theme');
+  if (saved) return saved;
+  return window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+}
+
+function applyTheme(theme) {
+  document.documentElement.setAttribute('data-theme', theme);
+  document.getElementById('theme-icon').textContent = theme === 'dark' ? '☀️' : '🌙';
+  document.getElementById('theme-label').textContent = theme === 'dark' ? 'Light' : 'Dark';
+  localStorage.setItem('aio-prism-theme', theme);
+  // Re-render to update text colors
+  if (loadedCount === 3) render();
+}
+
+document.getElementById('theme-toggle').addEventListener('click', () => {
+  const current = document.documentElement.getAttribute('data-theme') || 'dark';
+  applyTheme(current === 'dark' ? 'light' : 'dark');
+});
+
+applyTheme(getPreferredTheme());
+
+// ─── Boot ────────────────────────────────────────────────────────────────────
+loadAllData();
+</script>
+</body>
+</html>
