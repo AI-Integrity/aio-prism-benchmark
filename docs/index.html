@@ -66,77 +66,10 @@
     .header-links a { color: var(--text2); text-decoration: none; font-size: 12px; margin-left: 16px; transition: color 0.15s; }
     .header-links a:hover { color: var(--text); }
 
-    .container { max-width: 1100px; margin: 0 auto; padding: 28px 24px; }
-
-    /* Tabs */
-    .layer-tabs { display: flex; gap: 6px; margin-bottom: 20px; flex-wrap: wrap; }
-    .layer-tab {
-      background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
-      padding: 10px 20px; font-size: 13px; color: var(--text2); cursor: pointer; transition: all 0.15s;
-      display: flex; flex-direction: column; gap: 2px; min-width: 160px;
-    }
-    .layer-tab:hover { border-color: var(--accent); color: var(--text); }
-    .layer-tab.active { background: var(--accent); border-color: var(--accent); color: #fff; }
-    .layer-tab .tab-label { font-weight: 700; font-size: 14px; }
-    .layer-tab .tab-desc { font-size: 10px; opacity: 0.7; }
-    .layer-tab.active .tab-desc { opacity: 0.9; }
-
-    /* Filter */
-    .filter-panel { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px 24px; margin-bottom: 24px; }
-    .filter-panel h2 { font-size: 13px; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 16px; }
-    .filter-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 14px; }
-    .filter-group label { display: block; font-size: 11px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 6px; }
-    .filter-group select {
-      width: 100%; background: var(--surface2); border: 1px solid var(--border); border-radius: 6px;
-      color: var(--text); font-size: 13px; padding: 8px 10px; cursor: pointer; appearance: none;
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='var(--select-arrow)'/%3E%3C/svg%3E");
-      background-repeat: no-repeat; background-position: right 10px center; padding-right: 28px; transition: border-color 0.15s;
-    }
-    .filter-group select:focus { outline: none; border-color: var(--accent); }
-    .filter-summary { margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--border); font-size: 12px; color: var(--text2); }
-    .filter-summary .key-badge { display: inline-block; background: var(--surface2); border: 1px solid var(--border); border-radius: 4px; padding: 2px 7px; font-family: monospace; font-size: 11px; color: var(--accent); margin-left: 6px; }
-
-    /* Results */
-    .results-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
-    .results-header h2 { font-size: 15px; font-weight: 700; }
-    .record-count { font-size: 12px; color: var(--text3); }
-
-    /* Rankings Card */
-    .rankings-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
-    .rank-row {
-      display: grid; grid-template-columns: 36px 1fr 90px 110px; align-items: center;
-      padding: 13px 20px; border-bottom: 1px solid var(--border); transition: background 0.1s; gap: 12px;
-    }
-    .rank-row:last-child { border-bottom: none; }
-    .rank-row:hover { background: var(--surface2); }
-    .rank-num { font-size: 13px; font-weight: 700; color: var(--text3); text-align: center; }
-    .rank-num.top1 { color: #f5c542; } .rank-num.top2 { color: #b0bec5; } .rank-num.top3 { color: #cd7f32; }
-    [data-theme="light"] .rank-num.top1 { color: #b8860b; }
-    [data-theme="light"] .rank-num.top2 { color: #6b7280; }
-    [data-theme="light"] .rank-num.top3 { color: #92400e; }
-    .rank-value { display: flex; flex-direction: column; gap: 5px; }
-    .rank-value-name { font-size: 14px; font-weight: 600; }
-    .bar-track { height: 6px; background: var(--surface2); border-radius: 3px; overflow: hidden; }
-    .bar-fill { height: 100%; border-radius: 3px; transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
-    .rank-pct { font-size: 15px; font-weight: 700; text-align: right; }
-    .rank-stats { font-size: 11px; color: var(--text3); text-align: right; line-height: 1.5; }
-
-    /* Overview grid */
-    .all-layers-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 16px; }
-    .layer-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
-    .layer-card-header { padding: 14px 16px; background: var(--surface2); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
-    .layer-card-header .lch-title { font-size: 13px; font-weight: 700; }
-    .layer-card-header .lch-badge { font-size: 10px; font-weight: 600; background: var(--accent); color: #fff; padding: 2px 8px; border-radius: 10px; }
-    .layer-card-body { padding: 12px 16px; }
-    .mini-rank-row { display: flex; align-items: center; padding: 4px 0; gap: 8px; }
-    .mini-rank-num { width: 18px; font-size: 10px; font-weight: 700; color: var(--text3); flex-shrink: 0; }
-    .mini-bar-track { flex: 1; height: 4px; background: var(--surface2); border-radius: 2px; overflow: hidden; }
-    .mini-bar-fill { height: 100%; border-radius: 2px; }
-    .mini-value-name { font-size: 11px; color: var(--text2); width: 155px; flex-shrink: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .mini-pct { font-size: 11px; font-weight: 600; width: 42px; text-align: right; flex-shrink: 0; }
+    .container { max-width: 1280px; margin: 0 auto; padding: 28px 24px; }
 
     /* Analysis Report */
-    .report-section { margin-top: 40px; border-top: 2px solid var(--border); padding-top: 32px; }
+    .report-section { padding-top: 8px; }
     .report-section h2 { font-size: 18px; font-weight: 800; margin-bottom: 24px; }
     .report-section h3 { font-size: 13px; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 12px; }
     .report-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; margin-bottom: 16px; }
@@ -231,15 +164,13 @@
     .theme-toggle:hover { border-color: var(--accent); color: var(--text); }
     .theme-toggle .icon { font-size: 14px; }
 
+    /* Loading spinner */
+    .spinner { width: 32px; height: 32px; border: 3px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 12px; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
     @media (max-width: 640px) {
       header { padding: 14px 16px; }
       .container { padding: 16px 12px; }
-      .filter-grid { grid-template-columns: 1fr 1fr; }
-      .rank-row { grid-template-columns: 28px 1fr 60px; padding: 10px 12px; }
-      .rank-stats { display: none; }
-      .layer-tabs { gap: 4px; }
-      .layer-tab { min-width: 0; padding: 8px 12px; flex: 1; }
-      .all-layers-grid { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -280,7 +211,7 @@
   <!-- Loading state -->
   <div id="results-area">
     <div class="state-msg">
-      <div class="icon">...</div>
+      <div class="spinner"></div>
       <p>Loading benchmark data...</p>
     </div>
   </div>
@@ -381,7 +312,6 @@ function pct(n) { return (n * 100).toFixed(1) + '%'; }
 
 // === State ===================================================================
 const layerData = {};
-let activeLayer = 'overview';
 let loadedCount = 0;
 
 // === Load Data ===============================================================
@@ -393,7 +323,7 @@ async function loadAllData() {
       if (!res.ok) throw new Error(`${layer}: HTTP ${res.status}`);
       layerData[layer] = await res.json();
       loadedCount++;
-      area.innerHTML = `<div class="state-msg"><div class="icon">...</div><p>Loading... ${loadedCount}/3 layers</p></div>`;
+      area.innerHTML = `<div class="state-msg"><div class="spinner"></div><p>Loading... ${loadedCount}/3 layers</p></div>`;
     });
     await Promise.all(promises);
     area.style.display = 'none';
@@ -404,28 +334,8 @@ async function loadAllData() {
 }
 
 // === Key Builder =============================================================
-function buildKey() {
-  const dim = document.getElementById('sel-dimension').value;
-  const domain = document.getElementById('sel-domain').value;
-  const time = document.getElementById('sel-time').value;
-  const variant = document.getElementById('sel-variant').value;
-  const midVal = dim === 'by_severity' ? document.getElementById('sel-severity').value : document.getElementById('sel-scale').value;
-  return `${domain}|${midVal}|${time}|${variant}`;
-}
-
 function buildKeyWith(domain, severity, time, variant) {
   return `${domain}|${severity}|${time}|${variant}`;
-}
-
-function getRankings(layer) {
-  const data = layerData[layer];
-  if (!data) return null;
-  const dim = document.getElementById('sel-dimension').value;
-  const bucket = data[dim];
-  if (!bucket) return null;
-  const rankings = bucket[buildKey()];
-  if (!rankings) return null;
-  return [...rankings].sort((a, b) => a.rank - b.rank);
 }
 
 function getRankingsForKey(layer, key) {
@@ -437,59 +347,11 @@ function getRankingsForKey(layer, key) {
   return bucket[key] || null;
 }
 
-// === Render ==================================================================
-function render() {
-  document.getElementById('key-display').textContent = buildKey();
-  const area = document.getElementById('results-area');
-  if (activeLayer === 'overview') renderOverview(area);
-  else renderSingleLayer(area, activeLayer);
-}
-
-function renderSingleLayer(area, layer) {
-  const rankings = getRankings(layer);
-  const info = LAYER_INFO[layer];
-  const meta = layerData[layer]?.meta;
-  if (!rankings) { area.innerHTML = `<div class="state-msg"><p>No data for this filter combination.</p></div>`; return; }
-  const totalMatchups = rankings.reduce((s, r) => s + r.total, 0);
-  document.getElementById('sample-count').textContent = `${totalMatchups.toLocaleString()} matchups`;
-  area.innerHTML = `<div class="results-header"><h2>${info.title} — Win-Rate Rankings</h2><span class="record-count">${rankings.length} variables</span></div><div class="rankings-card" id="rank-list"></div>`;
-  const list = document.getElementById('rank-list');
-  rankings.forEach((entry, i) => {
-    const p = pct(entry.win_rate); const barW = (entry.win_rate*100).toFixed(2);
-    const numCls = i===0?'top1':i===1?'top2':i===2?'top3':'';
-    const tc = getVarTextColor(entry.variable); const bg = getVarBarGradient(entry.variable);
-    const conf = entry.avg_confidence!=null?(entry.avg_confidence*100).toFixed(1)+'% conf':'';
-    list.insertAdjacentHTML('beforeend', `<div class="rank-row"><div class="rank-num ${numCls}">#${i+1}</div><div class="rank-value"><div class="rank-value-name" style="color:${tc}">${displayName(entry.variable)}</div><div class="bar-track"><div class="bar-fill" style="width:${barW}%;background:${bg}"></div></div></div><div class="rank-pct" style="color:${tc}">${p}</div><div class="rank-stats">${entry.wins.toLocaleString()} / ${entry.total.toLocaleString()}<br>${conf}</div></div>`);
-  });
-}
-
-function renderOverview(area) {
-  const layers = ['L2','L3','L4'];
-  const totalRecords = layers.reduce((s,l)=>s+(layerData[l]?.meta?.valid_records||0),0);
-  document.getElementById('sample-count').textContent = `${totalRecords.toLocaleString()} total records across 3 layers`;
-  area.innerHTML = `<div class="results-header"><h2>All Layers — Win-Rate Rankings</h2><span class="record-count">3 layers</span></div><div class="all-layers-grid" id="layers-grid"></div>`;
-  const grid = document.getElementById('layers-grid');
-  layers.forEach(layer => {
-    const rankings = getRankings(layer); const info = LAYER_INFO[layer];
-    const card = document.createElement('div'); card.className = 'layer-card';
-    card.innerHTML = `<div class="layer-card-header"><span class="lch-title">${info.title}</span><span class="lch-badge">${info.desc}</span></div><div class="layer-card-body"></div>`;
-    grid.appendChild(card);
-    const body = card.querySelector('.layer-card-body');
-    if (!rankings) { body.innerHTML = '<div style="padding:12px 0;color:var(--text3);font-size:12px;">No data for this filter.</div>'; return; }
-    rankings.slice(0, 10).forEach((entry, i) => {
-      const barW = (entry.win_rate*100).toFixed(2); const p = pct(entry.win_rate);
-      const tc = getVarTextColor(entry.variable); const bg = getVarBarGradient(entry.variable);
-      body.insertAdjacentHTML('beforeend', `<div class="mini-rank-row"><div class="mini-rank-num">${i+1}</div><div class="mini-value-name" style="color:${tc}" title="${entry.variable}">${displayName(entry.variable)}</div><div class="mini-bar-track"><div class="mini-bar-fill" style="width:${barW}%;background:${bg}"></div></div><div class="mini-pct" style="color:${tc}">${p}</div></div>`);
-    });
-  });
-}
-
 // === Analysis Report =========================================================
 
 function analyzeVariantDivergence() {
-  const dim = document.getElementById('sel-dimension').value;
-  const severity = dim === 'by_severity' ? document.getElementById('sel-severity').value : document.getElementById('sel-scale').value;
-  const time = document.getElementById('sel-time').value;
+  const severity = document.getElementById('rpt-severity')?.value || 'ALL';
+  const time = document.getElementById('rpt-time')?.value || 'ALL';
   const layers = ['L4','L3','L2'];
   const results = [];
 
@@ -691,10 +553,16 @@ function renderAnalysisReport() {
   // Render the grid table with current report dropdown values
   renderReportGrid();
 
-  // Bind report-specific dropdowns
+  // Bind report-specific dropdowns (update both grid and divergence analysis)
   ['rpt-severity','rpt-time','rpt-variant'].forEach(id => {
     const el = document.getElementById(id);
-    if (el) el.addEventListener('change', renderReportGrid);
+    if (el) el.addEventListener('change', () => {
+      const saved = {};
+      ['rpt-severity','rpt-time','rpt-variant'].forEach(sid => { const sel = document.getElementById(sid); if (sel) saved[sid] = sel.value; });
+      renderAnalysisReport();
+      Object.entries(saved).forEach(([sid, val]) => { const sel = document.getElementById(sid); if (sel) sel.value = val; });
+      renderReportGrid();
+    });
   });
 }
 
@@ -759,7 +627,13 @@ function applyTheme(theme) {
   document.getElementById('theme-icon').textContent = theme === 'dark' ? '☀️' : '🌙';
   document.getElementById('theme-label').textContent = theme === 'dark' ? 'Light' : 'Dark';
   localStorage.setItem('aio-prism-theme', theme);
-  if (loadedCount === 3) { renderAnalysisReport(); }
+  if (loadedCount === 3) {
+    const saved = {};
+    ['rpt-severity','rpt-time','rpt-variant'].forEach(id => { const el = document.getElementById(id); if (el) saved[id] = el.value; });
+    renderAnalysisReport();
+    Object.entries(saved).forEach(([id, val]) => { const el = document.getElementById(id); if (el) { el.value = val; } });
+    renderReportGrid();
+  }
 }
 document.getElementById('theme-toggle').addEventListener('click', () => {
   const current = document.documentElement.getAttribute('data-theme') || 'dark';
