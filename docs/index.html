@@ -574,7 +574,7 @@ function renderOverview(area) {
     grid.appendChild(card);
     const body = card.querySelector('.layer-card-body');
     if (!rankings) { body.innerHTML = '<div style="padding:12px 0;color:var(--text3);font-size:12px;">No data for this filter.</div>'; return; }
-    rankings.forEach((entry, i) => {
+    rankings.slice(0, 10).forEach((entry, i) => {
       const barW = (entry.win_rate*100).toFixed(2); const p = pct(entry.win_rate);
       const tc = getVarTextColor(entry.variable); const bg = getVarBarGradient(entry.variable);
       body.insertAdjacentHTML('beforeend', `<div class="mini-rank-row"><div class="mini-rank-num">${i+1}</div><div class="mini-value-name" style="color:${tc}" title="${entry.variable}">${displayName(entry.variable)}</div><div class="mini-bar-track"><div class="mini-bar-fill" style="width:${barW}%;background:${bg}"></div></div><div class="mini-pct" style="color:${tc}">${p}</div></div>`);
