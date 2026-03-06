@@ -263,119 +263,21 @@
 
 <div class="container">
 
-  <!-- Layer Tabs -->
-  <div class="layer-tabs">
-    <div class="layer-tab active" data-layer="overview">
-      <span class="tab-label">Overview</span>
-      <span class="tab-desc">All layers at a glance</span>
-    </div>
-    <div class="layer-tab" data-layer="L2">
-      <span class="tab-label">L2 — Source</span>
-      <span class="tab-desc">Who says it? (10 sources)</span>
-    </div>
-    <div class="layer-tab" data-layer="L3">
-      <span class="tab-label">L3 — Epistemic</span>
-      <span class="tab-desc">How do we know? (10 types)</span>
-    </div>
-    <div class="layer-tab" data-layer="L4">
-      <span class="tab-label">L4 — Normative</span>
-      <span class="tab-desc">What matters? (19 values)</span>
-    </div>
+  <!-- Hidden elements for JS compatibility -->
+  <div style="display:none;">
+    <select id="sel-dimension"><option value="by_severity" selected></option></select>
+    <select id="sel-domain"><option value="ALL" selected></option></select>
+    <select id="sel-severity"><option value="ALL" selected></option></select>
+    <select id="sel-scale"><option value="ALL" selected></option></select>
+    <select id="sel-time"><option value="ALL" selected></option></select>
+    <select id="sel-variant"><option value="ALL" selected></option></select>
+    <span id="key-display"></span>
+    <span id="sample-count"></span>
+    <div id="fg-severity"></div>
+    <div id="fg-scale"></div>
   </div>
 
-  <!-- Filter Panel -->
-  <div class="filter-panel">
-    <h2>Filters</h2>
-    <div class="filter-grid">
-      <div class="filter-group">
-        <label>Dimension</label>
-        <select id="sel-dimension">
-          <option value="by_severity">By Severity x Reversibility</option>
-          <option value="by_scale">By Scale</option>
-        </select>
-      </div>
-      <div class="filter-group">
-        <label>Domain</label>
-        <select id="sel-domain">
-          <option value="ALL">All Domains</option>
-          <option value="MED">Medical / Bioethics</option>
-          <option value="LAW">Criminal Justice / Law</option>
-          <option value="BIZ">Business / Corporate</option>
-          <option value="DEF">Defense / National Security</option>
-          <option value="EDU">Education / Child Development</option>
-          <option value="CARE">Counseling / Personal Care</option>
-          <option value="TECH">Science / Technology / Environment</option>
-        </select>
-      </div>
-      <div class="filter-group" id="fg-severity">
-        <label>Severity</label>
-        <select id="sel-severity">
-          <option value="ALL">All Severities</option>
-          <optgroup label="Individual scope">
-            <option value="1-1">1-1 Individual / Reversible</option>
-            <option value="1-2">1-2 Individual / Partial</option>
-            <option value="1-3">1-3 Individual / Irreversible</option>
-          </optgroup>
-          <optgroup label="Relational scope">
-            <option value="2-1">2-1 Relational / Reversible</option>
-            <option value="2-2">2-2 Relational / Partial</option>
-            <option value="2-3">2-3 Relational / Irreversible</option>
-          </optgroup>
-          <optgroup label="Group scope">
-            <option value="3-1">3-1 Group / Reversible</option>
-            <option value="3-2">3-2 Group / Partial</option>
-            <option value="3-3">3-3 Group / Irreversible</option>
-          </optgroup>
-          <optgroup label="Societal scope">
-            <option value="4-1">4-1 Societal / Reversible</option>
-            <option value="4-2">4-2 Societal / Partial</option>
-            <option value="4-3">4-3 Societal / Irreversible</option>
-          </optgroup>
-          <optgroup label="Global scope">
-            <option value="5-1">5-1 Global / Reversible</option>
-            <option value="5-2">5-2 Global / Partial</option>
-            <option value="5-3">5-3 Global / Irreversible</option>
-          </optgroup>
-        </select>
-      </div>
-      <div class="filter-group" id="fg-scale" style="display:none;">
-        <label>Scale</label>
-        <select id="sel-scale">
-          <option value="ALL">All Scales</option>
-          <option value="1">1 Individual</option>
-          <option value="2">2 Relational</option>
-          <option value="3">3 Group</option>
-          <option value="4">4 Societal</option>
-          <option value="5">5 Global</option>
-        </select>
-      </div>
-      <div class="filter-group">
-        <label>Time Horizon</label>
-        <select id="sel-time">
-          <option value="ALL">All Time Horizons</option>
-          <option value="1">Immediate (24 h)</option>
-          <option value="2">Short-term (1 yr)</option>
-          <option value="3">Long-term (10+ yr)</option>
-          <option value="4">Permanent / Generational</option>
-        </select>
-      </div>
-      <div class="filter-group">
-        <label>Variant (Framing)</label>
-        <select id="sel-variant">
-          <option value="ALL">All Framings</option>
-          <option value="1">V1 -- Direct Conflict</option>
-          <option value="2">V2 -- Contextual Reframe</option>
-          <option value="3">V3 -- Systemic Perspective</option>
-        </select>
-      </div>
-    </div>
-    <div class="filter-summary">
-      Data key: <span class="key-badge" id="key-display">ALL|ALL|ALL|ALL</span>
-      <span id="sample-count" style="margin-left:12px;"></span>
-    </div>
-  </div>
-
-  <!-- Results -->
+  <!-- Loading state -->
   <div id="results-area">
     <div class="state-msg">
       <div class="icon">...</div>
@@ -494,7 +396,7 @@ async function loadAllData() {
       area.innerHTML = `<div class="state-msg"><div class="icon">...</div><p>Loading... ${loadedCount}/3 layers</p></div>`;
     });
     await Promise.all(promises);
-    render();
+    area.style.display = 'none';
     renderAnalysisReport();
   } catch (e) {
     area.innerHTML = `<div class="state-msg"><div class="icon">!</div><p>Could not load data.</p><p style="margin-top:8px;font-size:11px;color:var(--text3)">${e.message}</p></div>`;
@@ -845,28 +747,6 @@ function renderReportGrid() {
 
 // === Events ==================================================================
 
-document.querySelectorAll('.layer-tab').forEach(tab => {
-  tab.addEventListener('click', () => {
-    document.querySelectorAll('.layer-tab').forEach(t => t.classList.remove('active'));
-    tab.classList.add('active');
-    activeLayer = tab.getAttribute('data-layer');
-    render();
-  });
-});
-
-document.getElementById('sel-dimension').addEventListener('change', () => {
-  const dim = document.getElementById('sel-dimension').value;
-  document.getElementById('fg-severity').style.display = dim === 'by_severity' ? '' : 'none';
-  document.getElementById('fg-scale').style.display    = dim === 'by_scale'    ? '' : 'none';
-  if (dim === 'by_severity') document.getElementById('sel-scale').value = 'ALL';
-  else document.getElementById('sel-severity').value = 'ALL';
-  render(); renderAnalysisReport();
-});
-
-['sel-domain','sel-severity','sel-scale','sel-time','sel-variant'].forEach(id => {
-  document.getElementById(id).addEventListener('change', () => { render(); renderAnalysisReport(); });
-});
-
 // === Theme ===================================================================
 
 function getPreferredTheme() {
@@ -879,7 +759,7 @@ function applyTheme(theme) {
   document.getElementById('theme-icon').textContent = theme === 'dark' ? '☀️' : '🌙';
   document.getElementById('theme-label').textContent = theme === 'dark' ? 'Light' : 'Dark';
   localStorage.setItem('aio-prism-theme', theme);
-  if (loadedCount === 3) { render(); renderAnalysisReport(); }
+  if (loadedCount === 3) { renderAnalysisReport(); }
 }
 document.getElementById('theme-toggle').addEventListener('click', () => {
   const current = document.documentElement.getAttribute('data-theme') || 'dark';
