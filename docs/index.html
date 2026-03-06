@@ -176,6 +176,32 @@
     .vol-item .vol-domain { font-weight: 700; }
     .vol-item .vol-std { color: var(--text3); margin-left: 4px; }
 
+    /* Domain x Layer Grid Table */
+    .domain-grid-table { width: 100%; border-collapse: separate; border-spacing: 0; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+    .domain-grid-table th { background: var(--surface2); font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; color: var(--text2); padding: 12px 14px; border-bottom: 1px solid var(--border); text-align: center; }
+    .domain-grid-table th:first-child { text-align: left; width: 110px; }
+    .domain-grid-table td { padding: 10px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
+    .domain-grid-table tr:last-child td { border-bottom: none; }
+    .domain-grid-table tr:hover td { background: var(--surface2); }
+    .domain-grid-table .dg-domain { font-size: 13px; font-weight: 700; white-space: nowrap; }
+    .domain-grid-table .dg-domain-sub { font-size: 10px; color: var(--text3); }
+    .domain-grid-table .dg-cell { min-width: 180px; }
+    .dg-rank { display: flex; align-items: center; gap: 6px; padding: 2px 0; }
+    .dg-rank-num { width: 16px; font-size: 10px; font-weight: 700; color: var(--text3); flex-shrink: 0; text-align: center; }
+    .dg-rank-num.r1 { color: #f5c542; } .dg-rank-num.r2 { color: #b0bec5; } .dg-rank-num.r3 { color: #cd7f32; }
+    [data-theme="light"] .dg-rank-num.r1 { color: #b8860b; }
+    [data-theme="light"] .dg-rank-num.r2 { color: #6b7280; }
+    [data-theme="light"] .dg-rank-num.r3 { color: #92400e; }
+    .dg-rank-name { font-size: 11px; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .dg-rank-pct { font-size: 11px; font-weight: 600; flex-shrink: 0; width: 44px; text-align: right; }
+    .dg-bar { height: 3px; background: var(--surface2); border-radius: 2px; overflow: hidden; margin-top: 1px; }
+    .dg-bar-fill { height: 100%; border-radius: 2px; }
+    .dg-empty { font-size: 11px; color: var(--text3); font-style: italic; }
+
+    @media (max-width: 900px) {
+      .domain-grid-table { display: block; overflow-x: auto; }
+    }
+
     /* Loading */
     .state-msg { text-align: center; padding: 60px 20px; color: var(--text2); }
     .state-msg .icon { font-size: 32px; margin-bottom: 12px; }
@@ -620,26 +646,52 @@ function renderAnalysisReport() {
     if (r && r.length) globalTop[layer] = r.sort((a,b)=>a.rank-b.rank)[0];
   }
 
+  const currentKey = buildKey();
+  const layers = ['L4','L3','L2'];
+
   let html = `<div class="report-section">
     <h2>PRISM Analysis Report</h2>
 
-    <h3>1. Global Rankings (All Conditions)</h3>
-    <div class="all-layers-grid" style="margin-bottom:24px;">`;
+    <h3>1. Rankings by Domain (Top 5)</h3>
+    <table class="domain-grid-table"><thead><tr>
+      <th>Domain</th>
+      <th>L4 — Values</th>
+      <th>L3 — Epistemic</th>
+      <th>L2 — Source</th>
+    </tr></thead><tbody>`;
 
-  for (const layer of ['L4','L3','L2']) {
-    const r = getRankingsForKey(layer, 'ALL|ALL|ALL|ALL');
-    if (!r) continue;
-    const sorted = [...r].sort((a,b)=>a.rank-b.rank).slice(0,5);
-    const info = LAYER_INFO[layer];
-    const meta = layerData[layer]?.meta;
-    html += `<div class="layer-card"><div class="layer-card-header"><span class="lch-title">${info.title}</span><span class="lch-badge">${meta?.valid_records?.toLocaleString()||'?'} records</span></div><div class="layer-card-body">`;
-    sorted.forEach((entry, i) => {
-      const tc = getVarTextColor(entry.variable); const bg = getVarBarGradient(entry.variable);
-      html += `<div class="mini-rank-row"><div class="mini-rank-num">${i+1}</div><div class="mini-value-name" style="color:${tc}">${displayName(entry.variable)}</div><div class="mini-bar-track"><div class="mini-bar-fill" style="width:${(entry.win_rate*100).toFixed(2)}%;background:${bg}"></div></div><div class="mini-pct" style="color:${tc}">${pct(entry.win_rate)}</div></div>`;
-    });
-    html += `</div></div>`;
+  for (const domain of DOMAINS) {
+    const domKey = buildKeyWith(domain,
+      document.getElementById('sel-dimension').value === 'by_severity' ? document.getElementById('sel-severity').value : document.getElementById('sel-scale').value,
+      document.getElementById('sel-time').value,
+      document.getElementById('sel-variant').value
+    );
+    html += `<tr><td><div class="dg-domain">${domain}</div><div class="dg-domain-sub">${DOMAIN_NAMES[domain]||domain}</div></td>`;
+    for (const layer of layers) {
+      const r = getRankingsForKey(layer, domKey);
+      html += `<td class="dg-cell">`;
+      if (r && r.length) {
+        const sorted = [...r].sort((a,b)=>a.rank-b.rank).slice(0,5);
+        sorted.forEach((entry, i) => {
+          const tc = getVarTextColor(entry.variable);
+          const bg = getVarBarGradient(entry.variable);
+          const barW = (entry.win_rate*100).toFixed(2);
+          const rcls = i===0?'r1':i===1?'r2':i===2?'r3':'';
+          html += `<div class="dg-rank">
+            <div class="dg-rank-num ${rcls}">${i+1}</div>
+            <div class="dg-rank-name" style="color:${tc}" title="${entry.variable}">${displayName(entry.variable)}</div>
+            <div class="dg-rank-pct" style="color:${tc}">${pct(entry.win_rate)}</div>
+          </div>
+          <div class="dg-bar"><div class="dg-bar-fill" style="width:${barW}%;background:${bg}"></div></div>`;
+        });
+      } else {
+        html += `<div class="dg-empty">No data</div>`;
+      }
+      html += `</td>`;
+    }
+    html += `</tr>`;
   }
-  html += `</div>`;
+  html += `</tbody></table>`;
 
   // Section 2: Framing Sensitivity
   html += `<h3>2. Framing Sensitivity Analysis (Cross-Variant Divergence)</h3>
