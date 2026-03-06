@@ -176,6 +176,17 @@
     .vol-item .vol-domain { font-weight: 700; }
     .vol-item .vol-std { color: var(--text3); margin-left: 4px; }
 
+    /* Inline filter row for report sections */
+    .report-filters { display: flex; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; align-items: end; }
+    .report-filters .rf-group label { display: block; font-size: 10px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+    .report-filters .rf-group select {
+      background: var(--surface2); border: 1px solid var(--border); border-radius: 6px;
+      color: var(--text); font-size: 12px; padding: 6px 28px 6px 10px; cursor: pointer; appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='var(--select-arrow)'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right 8px center; transition: border-color 0.15s;
+    }
+    .report-filters .rf-group select:focus { outline: none; border-color: var(--accent); }
+
     /* Domain x Layer Grid Table */
     .domain-grid-table { width: 100%; border-collapse: separate; border-spacing: 0; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
     .domain-grid-table th { background: var(--surface2); font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; color: var(--text2); padding: 12px 14px; border-bottom: 1px solid var(--border); text-align: center; }
@@ -646,52 +657,62 @@ function renderAnalysisReport() {
     if (r && r.length) globalTop[layer] = r.sort((a,b)=>a.rank-b.rank)[0];
   }
 
-  const currentKey = buildKey();
   const layers = ['L4','L3','L2'];
 
   let html = `<div class="report-section">
     <h2>PRISM Analysis Report</h2>
 
     <h3>1. Rankings by Domain (Top 5)</h3>
-    <table class="domain-grid-table"><thead><tr>
-      <th>Domain</th>
-      <th>L4 — Values</th>
-      <th>L3 — Epistemic</th>
-      <th>L2 — Source</th>
-    </tr></thead><tbody>`;
-
-  for (const domain of DOMAINS) {
-    const domKey = buildKeyWith(domain,
-      document.getElementById('sel-dimension').value === 'by_severity' ? document.getElementById('sel-severity').value : document.getElementById('sel-scale').value,
-      document.getElementById('sel-time').value,
-      document.getElementById('sel-variant').value
-    );
-    html += `<tr><td><div class="dg-domain">${domain}</div><div class="dg-domain-sub">${DOMAIN_NAMES[domain]||domain}</div></td>`;
-    for (const layer of layers) {
-      const r = getRankingsForKey(layer, domKey);
-      html += `<td class="dg-cell">`;
-      if (r && r.length) {
-        const sorted = [...r].sort((a,b)=>a.rank-b.rank).slice(0,5);
-        sorted.forEach((entry, i) => {
-          const tc = getVarTextColor(entry.variable);
-          const bg = getVarBarGradient(entry.variable);
-          const barW = (entry.win_rate*100).toFixed(2);
-          const rcls = i===0?'r1':i===1?'r2':i===2?'r3':'';
-          html += `<div class="dg-rank">
-            <div class="dg-rank-num ${rcls}">${i+1}</div>
-            <div class="dg-rank-name" style="color:${tc}" title="${entry.variable}">${displayName(entry.variable)}</div>
-            <div class="dg-rank-pct" style="color:${tc}">${pct(entry.win_rate)}</div>
-          </div>
-          <div class="dg-bar"><div class="dg-bar-fill" style="width:${barW}%;background:${bg}"></div></div>`;
-        });
-      } else {
-        html += `<div class="dg-empty">No data</div>`;
-      }
-      html += `</td>`;
-    }
-    html += `</tr>`;
-  }
-  html += `</tbody></table>`;
+    <div class="report-filters">
+      <div class="rf-group"><label>Severity</label>
+        <select id="rpt-severity">
+          <option value="ALL">All Severities</option>
+          <optgroup label="Individual scope">
+            <option value="1-1">1-1 Individual / Reversible</option>
+            <option value="1-2">1-2 Individual / Partial</option>
+            <option value="1-3">1-3 Individual / Irreversible</option>
+          </optgroup>
+          <optgroup label="Relational scope">
+            <option value="2-1">2-1 Relational / Reversible</option>
+            <option value="2-2">2-2 Relational / Partial</option>
+            <option value="2-3">2-3 Relational / Irreversible</option>
+          </optgroup>
+          <optgroup label="Group scope">
+            <option value="3-1">3-1 Group / Reversible</option>
+            <option value="3-2">3-2 Group / Partial</option>
+            <option value="3-3">3-3 Group / Irreversible</option>
+          </optgroup>
+          <optgroup label="Societal scope">
+            <option value="4-1">4-1 Societal / Reversible</option>
+            <option value="4-2">4-2 Societal / Partial</option>
+            <option value="4-3">4-3 Societal / Irreversible</option>
+          </optgroup>
+          <optgroup label="Global scope">
+            <option value="5-1">5-1 Global / Reversible</option>
+            <option value="5-2">5-2 Global / Partial</option>
+            <option value="5-3">5-3 Global / Irreversible</option>
+          </optgroup>
+        </select>
+      </div>
+      <div class="rf-group"><label>Time Horizon</label>
+        <select id="rpt-time">
+          <option value="ALL">All Time Horizons</option>
+          <option value="1">Immediate (24 h)</option>
+          <option value="2">Short-term (1 yr)</option>
+          <option value="3">Long-term (10+ yr)</option>
+          <option value="4">Permanent / Generational</option>
+        </select>
+      </div>
+      <div class="rf-group"><label>Variant (Framing)</label>
+        <select id="rpt-variant">
+          <option value="ALL">All Framings</option>
+          <option value="1">V1 -- Direct Conflict</option>
+          <option value="2">V2 -- Contextual Reframe</option>
+          <option value="3">V3 -- Systemic Perspective</option>
+        </select>
+      </div>
+    </div>
+    <div id="rpt-grid-container"></div>`;
 
   // Section 2: Framing Sensitivity
   html += `<h3>2. Framing Sensitivity Analysis (Cross-Variant Divergence)</h3>
@@ -764,6 +785,62 @@ function renderAnalysisReport() {
   </div>`;
 
   report.innerHTML = html;
+
+  // Render the grid table with current report dropdown values
+  renderReportGrid();
+
+  // Bind report-specific dropdowns
+  ['rpt-severity','rpt-time','rpt-variant'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('change', renderReportGrid);
+  });
+}
+
+function renderReportGrid() {
+  const container = document.getElementById('rpt-grid-container');
+  if (!container) return;
+
+  const severity = document.getElementById('rpt-severity')?.value || 'ALL';
+  const time = document.getElementById('rpt-time')?.value || 'ALL';
+  const variant = document.getElementById('rpt-variant')?.value || 'ALL';
+  const layers = ['L4','L3','L2'];
+
+  let html = `<table class="domain-grid-table"><thead><tr>
+    <th>Domain</th>
+    <th>L4 — Values</th>
+    <th>L3 — Epistemic</th>
+    <th>L2 — Source</th>
+  </tr></thead><tbody>`;
+
+  for (const domain of DOMAINS) {
+    const domKey = buildKeyWith(domain, severity, time, variant);
+    html += `<tr><td><div class="dg-domain">${domain}</div><div class="dg-domain-sub">${DOMAIN_NAMES[domain]||domain}</div></td>`;
+    for (const layer of layers) {
+      const r = getRankingsForKey(layer, domKey);
+      html += `<td class="dg-cell">`;
+      if (r && r.length) {
+        const sorted = [...r].sort((a,b)=>a.rank-b.rank).slice(0,5);
+        sorted.forEach((entry, i) => {
+          const tc = getVarTextColor(entry.variable);
+          const bg = getVarBarGradient(entry.variable);
+          const barW = (entry.win_rate*100).toFixed(2);
+          const rcls = i===0?'r1':i===1?'r2':i===2?'r3':'';
+          html += `<div class="dg-rank">
+            <div class="dg-rank-num ${rcls}">${i+1}</div>
+            <div class="dg-rank-name" style="color:${tc}" title="${entry.variable}">${displayName(entry.variable)}</div>
+            <div class="dg-rank-pct" style="color:${tc}">${pct(entry.win_rate)}</div>
+          </div>
+          <div class="dg-bar"><div class="dg-bar-fill" style="width:${barW}%;background:${bg}"></div></div>`;
+        });
+      } else {
+        html += `<div class="dg-empty">No data</div>`;
+      }
+      html += `</td>`;
+    }
+    html += `</tr>`;
+  }
+  html += `</tbody></table>`;
+  container.innerHTML = html;
 }
 
 // === Events ==================================================================
