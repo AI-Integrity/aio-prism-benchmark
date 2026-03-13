@@ -1,0 +1,35 @@
+cff-version: 1.2.0
+message: "If you use this benchmark, please cite it as below."
+title: "AIO PRISM Benchmark: Profile-based Reasoning Integrity Stack Measurement"
+authors:
+  - family-names: "Lee"
+    given-names: "Seulki"
+    email: "2sk@aioq.org"
+    affiliation: "AI Integrity Organization (AIO)"
+    orcid: ""
+url: "https://github.com/AI-Integrity/aio-prism-benchmark"
+repository-code: "https://github.com/AI-Integrity/aio-prism-benchmark"
+license: "CC-BY-4.0"
+type: dataset
+date-released: "2026-03-01"
+identifiers:
+  - type: doi
+    value: "10.5281/zenodo.18861026"
+    description: "PRISM Conceptual Paper"
+  - type: doi
+    value: "10.5281/zenodo.18859945"
+    description: "Empirical Paper (L4, 113,400 responses)"
+  - type: doi
+    value: "10.5281/zenodo.18772961"
+    description: "Prior Benchmark Dataset"
+keywords:
+  - ai-integrity
+  - prism-framework
+  - authority-stack
+  - schwartz-values
+  - walton-argumentation
+  - evidence-hierarchy
+  - source-credibility
+  - ai-governance
+  - llm-evaluation
+  - forced-choice-benchmark
