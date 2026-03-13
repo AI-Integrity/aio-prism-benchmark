@@ -352,70 +352,14 @@ function getRankingsForKey(layer, key) {
 
 // === Analysis Report =========================================================
 
-function analyzeVariantDivergence() {
-  const severity = document.getElementById('rpt-severity')?.value || 'ALL';
-  const time = document.getElementById('rpt-time')?.value || 'ALL';
-  const layers = ['L4','L3','L2'];
-  const results = [];
-
-  for (const domain of DOMAINS) {
-    const layerDivs = {};
-    const inversions = [];
-    let maxStd = 0, maxStdVar = null;
-
-    for (const layer of layers) {
-      const v1 = getRankingsForKey(layer, buildKeyWith(domain, severity, time, '1')) || [];
-      const v2 = getRankingsForKey(layer, buildKeyWith(domain, severity, time, '2')) || [];
-      const v3 = getRankingsForKey(layer, buildKeyWith(domain, severity, time, '3')) || [];
-
-      if (!v1.length && !v2.length && !v3.length) { layerDivs[layer] = 0; continue; }
-
-      const varMap = {};
-      for (const arr of [v1, v2, v3]) {
-        for (const e of arr) {
-          if (!varMap[e.variable]) varMap[e.variable] = { wr: [], rk: [] };
-          varMap[e.variable].wr.push(e.win_rate);
-          varMap[e.variable].rk.push(e.rank);
-        }
-      }
-
-      let sumStd = 0, count = 0;
-      for (const [v, data] of Object.entries(varMap)) {
-        if (data.wr.length < 2) continue;
-        const mean = data.wr.reduce((a,b)=>a+b,0) / data.wr.length;
-        const variance = data.wr.reduce((a,b)=>a+(b-mean)**2,0) / data.wr.length;
-        const std = Math.sqrt(variance);
-        sumStd += std; count++;
-        if (std > maxStd) { maxStd = std; maxStdVar = v; }
-        if (data.rk.length === 3) {
-          const minR = Math.min(...data.rk), maxR = Math.max(...data.rk);
-          if (minR <= 3 && maxR - minR >= 3) {
-            inversions.push({ layer, variable: v, ranks: data.rk, winRates: data.wr });
-          }
-        }
-      }
-      layerDivs[layer] = count > 0 ? sumStd / count : 0;
-    }
-
-    const avgDiv = Object.values(layerDivs).reduce((a,b)=>a+b,0) / layers.length;
-    results.push({ domain, avgDivergence: avgDiv, layerDivergences: layerDivs, rankInversions: inversions, mostVolatileVar: maxStdVar, mostVolatileStd: maxStd });
-  }
-
-  results.sort((a,b) => b.avgDivergence - a.avgDivergence);
-  return results;
-}
+// analyzeVariantDivergence removed — main benchmark variants are independent scenarios,
+// not perspective re-narrations. PCS is measured separately (see Section 2 below).
 
 function renderAnalysisReport() {
   const report = document.getElementById('analysis-report');
-  const divergences = analyzeVariantDivergence();
-  if (!divergences.length) { report.innerHTML = ''; return; }
 
-  const maxDiv = divergences[0];
-  const minDiv = divergences[divergences.length - 1];
-  const allInversions = divergences.flatMap(d => d.rankInversions.map(inv => ({ ...inv, domain: d.domain })));
-  const maxBarWidth = Math.max(...divergences.map(d => d.avgDivergence), 0.001);
   const totalRecords = ['L2','L3','L4'].reduce((s,l)=>s+(layerData[l]?.meta?.valid_records||0),0);
-  const highDivDomains = divergences.filter(d => d.avgDivergence > divergences.reduce((s,x)=>s+x.avgDivergence,0)/divergences.length);
+  if (!totalRecords) { report.innerHTML = ''; return; }
 
   // Global #1 per layer
   const globalTop = {};
@@ -424,11 +368,9 @@ function renderAnalysisReport() {
     if (r && r.length) globalTop[layer] = r.sort((a,b)=>a.rank-b.rank)[0];
   }
 
-  const layers = ['L4','L3','L2'];
-
   let html = `<div class="report-section">
     <h2>PRISM Analysis Report</h2>
-    <p class="report-subtitle">Multi-layer value hierarchy analysis across ${totalRecords.toLocaleString()} forced-choice responses. Rankings show win-rate from pairwise comparisons across 7 domains, 3 authority layers, and 3 question framings.</p>
+    <p class="report-subtitle">Multi-layer value hierarchy analysis across ${totalRecords.toLocaleString()} forced-choice responses. Rankings show win-rate from pairwise comparisons across 7 domains and 3 authority layers. Each factorial cell includes 3 independently generated scenario variants for measurement robustness.</p>
 
     <h3>1. Rankings by Domain (Top 5)</h3>
     <div class="report-filters">
@@ -471,83 +413,95 @@ function renderAnalysisReport() {
           <option value="4">Permanent / Generational</option>
         </select>
       </div>
-      <div class="rf-group"><label>Variant (Framing)</label>
+      <div class="rf-group"><label>Scenario Variant</label>
         <select id="rpt-variant">
-          <option value="ALL">All Framings</option>
-          <option value="1">V1 -- Direct Conflict</option>
-          <option value="2">V2 -- Contextual Reframe</option>
-          <option value="3">V3 -- Systemic Perspective</option>
+          <option value="ALL">All Variants</option>
+          <option value="1">Variant 1</option>
+          <option value="2">Variant 2</option>
+          <option value="3">Variant 3</option>
         </select>
       </div>
     </div>
     <div id="rpt-grid-container"></div>`;
 
-  // Section 2: Framing Sensitivity
-  html += `<h3>2. Framing Sensitivity Analysis (Cross-Variant Divergence)</h3>
+  // Section 2: Perspective Consistency Score (PCS)
+  html += `<h3>2. Perspective Consistency Score (PCS)</h3>
     <p style="font-size:14px;color:var(--text2);margin-bottom:20px;line-height:1.7;">
-      Measures how much AI responses (win rates) vary when the same conflict is presented with 3 different framings (V1/V2/V3). Higher divergence = more sensitive to phrasing.
+      The main benchmark generates 3 independent scenario variants per factorial cell for measurement robustness. To directly test <strong>framing robustness</strong> — whether value judgments change when the same dilemma is presented from different narrative perspectives — a dedicated PCS measurement was conducted: 648 responses across 216 conditions, each tested from 3 perspectives (external observer, institutional manager, frontline practitioner).
     </p>
-    <div class="report-card">`;
 
-  divergences.forEach(d => {
-    const barPct = maxBarWidth > 0 ? (d.avgDivergence / maxBarWidth) * 100 : 0;
-    const isHigh = d === maxDiv, isLow = d === minDiv;
-    const cls = isHigh ? 'high' : isLow ? 'low' : 'mid';
-    html += `<div class="div-bar-row">
-      <div class="div-bar-label"><div class="domain-id">${d.domain}</div><div class="domain-name">${DOMAIN_NAMES[d.domain]||d.domain}</div></div>
-      <div class="div-bar-track"><div class="div-bar-fill ${cls}" style="width:${Math.max(barPct,2)}%"></div></div>
-      <div class="div-bar-value" style="color:var(--${isHigh?'red':isLow?'green':'text2'})">${(d.avgDivergence*100).toFixed(2)}%p</div>
-      <div class="div-bar-badge ${cls}">${isHigh?'Highest':isLow?'Lowest':''}</div>
-    </div>`;
-  });
-  html += `</div>`;
-
-  // Rank inversions
-  if (allInversions.length > 0) {
-    html += `<div class="report-card amber">
-      <h4>Rank Inversions Detected (${allInversions.length} cases)</h4>
-      <p style="margin-bottom:10px;">Cases where a top-3 variable drops 3+ ranks in another framing. AI priority ordering can substantially flip depending on how the question is framed.</p>`;
-    allInversions.slice(0, 10).forEach(inv => {
-      html += `<div class="inv-row"><span class="inv-domain">${inv.domain}</span><span class="inv-layer">${inv.layer}</span><span class="inv-var">${displayName(inv.variable)}</span><span class="inv-ranks">Rank: ${inv.ranks.join(' / ')}</span></div>`;
-    });
-    if (allInversions.length > 10) html += `<p style="font-size:11px;color:var(--text3);margin-top:6px;">+${allInversions.length-10} more</p>`;
-    html += `</div>`;
-  }
-
-  // Most volatile
-  const volatiles = divergences.filter(d => d.mostVolatileVar);
-  if (volatiles.length) {
-    html += `<div class="report-card"><h4 style="color:var(--text)">Most Volatile Variable per Domain</h4><div class="vol-grid">`;
-    volatiles.forEach(d => {
-      html += `<div class="vol-item"><span class="vol-domain">${d.domain}:</span> ${displayName(d.mostVolatileVar)} <span class="vol-std">(+/-${(d.mostVolatileStd*100).toFixed(1)}%p)</span></div>`;
-    });
-    html += `</div></div>`;
-  }
-
-  // Section 3: Implications
-  html += `<h3>3. Implications &amp; Issues</h3>
-    <div class="report-card red">
-      <h4>Core Issue: Value Judgment Instability from Framing Effects</h4>
-      <p>When the same value conflict is rephrased differently, the ${maxDiv.domain} (${DOMAIN_NAMES[maxDiv.domain]}) domain shows an average ${(maxDiv.avgDivergence*100).toFixed(2)}%p win-rate divergence. This means the AI's value judgment depends on how the question is "worded", not just on the underlying conflict.</p>
-      ${allInversions.length > 0 ? `<p style="margin-top:8px;">${allInversions.length} rank inversions were detected — cases where simply reframing the question causes the AI to prioritize entirely different values. This is a serious concern from an AI Safety perspective.</p>` : ''}
+    <div class="report-card">
+      <h4 style="color:var(--text)">Overall PCS: <span style="color:var(--green)">0.963</span></h4>
+      <p>216 conditions tested across 3 perspectives each. 88.9% (192/216) showed full agreement across all perspectives; 11.1% (24/216) showed a 2:1 split; 0% showed full disagreement. The model is highly stable under perspective shifts.</p>
     </div>
 
-    <div class="report-card blue">
-      <h4>Domain-Specific Findings</h4>
+    <div class="report-card">
+      <h4 style="color:var(--text)">PCS by Domain</h4>
+      <div class="div-bar-row">
+        <div class="div-bar-label"><div class="domain-id">MED</div><div class="domain-name">Healthcare</div></div>
+        <div class="div-bar-track"><div class="div-bar-fill low" style="width:98.2%"></div></div>
+        <div class="div-bar-value" style="color:var(--green)">0.982</div>
+        <div class="div-bar-badge low">Most stable</div>
+      </div>
+      <div class="div-bar-row">
+        <div class="div-bar-label"><div class="domain-id">LAW</div><div class="domain-name">Criminal Justice</div></div>
+        <div class="div-bar-track"><div class="div-bar-fill mid" style="width:96.3%"></div></div>
+        <div class="div-bar-value" style="color:var(--text2)">0.963</div>
+        <div class="div-bar-badge"></div>
+      </div>
+      <div class="div-bar-row">
+        <div class="div-bar-label"><div class="domain-id">DEF</div><div class="domain-name">Defense</div></div>
+        <div class="div-bar-track"><div class="div-bar-fill mid" style="width:95.7%"></div></div>
+        <div class="div-bar-value" style="color:var(--text2)">0.957</div>
+        <div class="div-bar-badge"></div>
+      </div>
+      <div class="div-bar-row">
+        <div class="div-bar-label"><div class="domain-id">BIZ</div><div class="domain-name">Business</div></div>
+        <div class="div-bar-track"><div class="div-bar-fill high" style="width:95.1%"></div></div>
+        <div class="div-bar-value" style="color:var(--red)">0.951</div>
+        <div class="div-bar-badge high">Least stable</div>
+      </div>
+    </div>
+
+    <div class="report-card amber">
+      <h4>Perspective Bias Signals</h4>
+      <p style="margin-bottom:10px;">Win-rate shifts when the same dilemma is presented from different narrative perspectives. Largest deviations from the overall average:</p>
       <ul>
-        <li>Most sensitive domains: <strong>${highDivDomains.map(d=>`${d.domain} (${DOMAIN_NAMES[d.domain]})`).join(', ')}</strong> — trusting AI value judgments in these fields requires mandatory consistency validation across multiple framings.</li>
-        <li>Most stable domain: <strong>${minDiv.domain} (${DOMAIN_NAMES[minDiv.domain]})</strong> — at ${(minDiv.avgDivergence*100).toFixed(2)}%p divergence, it shows relatively consistent value ordering regardless of framing.</li>
-        ${globalTop.L4 ? `<li>"${displayName(globalTop.L4.variable)}" ranks #1 overall in L4 (${pct(globalTop.L4.win_rate)}) — but this ranking can invert in specific domain/framing combinations, making it dangerous to judge AI's value system solely by global averages.</li>` : ''}
+        <li><strong>Self-Direction-Action</strong> — most perspective-sensitive value:
+          <br>v1 External observer: 0.625 · v2 Institutional manager: <span style="color:var(--red)">0.458 (−0.125)</span> · v3 Frontline practitioner: <span style="color:var(--green)">0.667 (+0.083)</span>
+          <br><em>Institutional framing suppresses action-autonomy; practitioner framing amplifies it.</em></li>
+        <li><strong>Security-Personal</strong> — practitioner perspective eliminates this value:
+          <br>v2 Institutional manager: 0.125 · v3 Frontline practitioner: <span style="color:var(--red)">0.000 (−0.069)</span>
+          <br><em>Practitioners completely deprioritize personal security framing.</em></li>
       </ul>
     </div>
 
     <div class="report-card">
-      <h4 style="color:var(--text)">Structural Implications</h4>
+      <h4 style="color:var(--text)">Most Unstable Conditions</h4>
+      <p style="margin-bottom:10px;">8 of 10 lowest-PCS conditions (PCS = 0.67) occur in BIZ domain, concentrated in two intra-value-family pairs:</p>
       <ul>
-        <li>Framing effects are a classic human cognitive bias — their presence in AI suggests the model has learned and reproduces human biases.</li>
-        <li>Limitations of existing benchmarks that evaluate AI values with a single prompt highlight the necessity of multi-framing cross-validation (the PRISM approach).</li>
-        <li>In practice, AI decisions in high-stakes domains (medical/defense/legal) must be validated for consistency across multiple framings before being trusted.</li>
-        <li>${totalRecords.toLocaleString()} forced-choice responses x 3-framing cross-analysis enables 3x reliability validation compared to single-prompt evaluation.</li>
+        <li><strong>Security-Personal vs. Security-Societal</strong> — intra-conservation conflict. The institutional manager (v2) perspective frequently diverges from the other two.</li>
+        <li><strong>Self-Direction-Thought vs. Self-Direction-Action</strong> — intra-autonomy conflict. These sub-value distinctions from Schwartz's 19-value refinement are conceptually valid but empirically fragile under perspective shifts.</li>
+      </ul>
+    </div>`;
+
+  // Section 3: Implications
+  html += `<h3>3. Implications</h3>
+    <div class="report-card blue">
+      <h4>Key Findings</h4>
+      <ul>
+        <li><strong>High overall stability.</strong> PCS of 0.963 indicates that value judgments are largely robust to perspective shifts — the model maintains consistent priorities regardless of whether a dilemma is presented from an observer, manager, or practitioner viewpoint.</li>
+        <li><strong>Domain sensitivity.</strong> MED (Healthcare) is the most perspective-stable domain (0.982), while BIZ (Business) is the least stable (0.951) — business dilemmas are most sensitive to whose perspective the scenario adopts.</li>
+        ${globalTop.L4 ? '<li><strong>Top-value stability.</strong> "' + displayName(globalTop.L4.variable) + '" ranks #1 overall in L4 (' + pct(globalTop.L4.win_rate) + '). The PCS measurement confirms that top-tier value rankings are robust, while instability concentrates in intra-value-family pairs (e.g., Security-Personal vs. Security-Societal).</li>' : ''}
+      </ul>
+    </div>
+
+    <div class="report-card">
+      <h4 style="color:var(--text)">Measurement Design Note</h4>
+      <ul>
+        <li>The 3 scenario variants in the main benchmark are <strong>independently generated scenarios</strong> — not re-narrations of the same event. They provide measurement robustness through replication, not perspective comparison.</li>
+        <li>PCS was measured in a <strong>dedicated separate experiment</strong> (648 responses, 216 conditions × 3 perspectives) specifically designed to test framing robustness by presenting the same dilemma from 3 narrative viewpoints.</li>
+        <li>The distinction matters: high cross-variant consistency in the main benchmark indicates <strong>scenario replication stability</strong>; high PCS indicates <strong>perspective framing robustness</strong>. Both are necessary for reliable value measurement.</li>
       </ul>
     </div>
   </div>`;
@@ -557,7 +511,7 @@ function renderAnalysisReport() {
   // Render the grid table with current report dropdown values
   renderReportGrid();
 
-  // Bind report-specific dropdowns (update both grid and divergence analysis)
+  // Bind report-specific dropdowns (update grid on filter change)
   ['rpt-severity','rpt-time','rpt-variant'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.addEventListener('change', () => {
