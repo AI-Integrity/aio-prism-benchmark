@@ -413,14 +413,6 @@ function renderAnalysisReport() {
           <option value="4">Permanent / Generational</option>
         </select>
       </div>
-      <div class="rf-group"><label>Scenario Variant</label>
-        <select id="rpt-variant">
-          <option value="ALL">All Variants</option>
-          <option value="1">Variant 1</option>
-          <option value="2">Variant 2</option>
-          <option value="3">Variant 3</option>
-        </select>
-      </div>
     </div>
     <div id="rpt-grid-container"></div>`;
 
@@ -512,11 +504,11 @@ function renderAnalysisReport() {
   renderReportGrid();
 
   // Bind report-specific dropdowns (update grid on filter change)
-  ['rpt-severity','rpt-time','rpt-variant'].forEach(id => {
+  ['rpt-severity','rpt-time'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.addEventListener('change', () => {
       const saved = {};
-      ['rpt-severity','rpt-time','rpt-variant'].forEach(sid => { const sel = document.getElementById(sid); if (sel) saved[sid] = sel.value; });
+      ['rpt-severity','rpt-time'].forEach(sid => { const sel = document.getElementById(sid); if (sel) saved[sid] = sel.value; });
       renderAnalysisReport();
       Object.entries(saved).forEach(([sid, val]) => { const sel = document.getElementById(sid); if (sel) sel.value = val; });
       renderReportGrid();
@@ -530,7 +522,7 @@ function renderReportGrid() {
 
   const severity = document.getElementById('rpt-severity')?.value || 'ALL';
   const time = document.getElementById('rpt-time')?.value || 'ALL';
-  const variant = document.getElementById('rpt-variant')?.value || 'ALL';
+  const variant = 'ALL';
   const layers = ['L4','L3','L2'];
 
   let html = `<table class="domain-grid-table"><thead><tr>
@@ -587,7 +579,7 @@ function applyTheme(theme) {
   localStorage.setItem('aio-prism-theme', theme);
   if (loadedCount === 3) {
     const saved = {};
-    ['rpt-severity','rpt-time','rpt-variant'].forEach(id => { const el = document.getElementById(id); if (el) saved[id] = el.value; });
+    ['rpt-severity','rpt-time'].forEach(id => { const el = document.getElementById(id); if (el) saved[id] = el.value; });
     renderAnalysisReport();
     Object.entries(saved).forEach(([id, val]) => { const el = document.getElementById(id); if (el) { el.value = val; } });
     renderReportGrid();
