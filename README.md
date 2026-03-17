@@ -48,7 +48,7 @@ The Authority Stack is a 4-layer cascade model describing how AI reasoning is st
 └─────────────────────────────────────────────────────────────┘
 ```
 
-**AI Integrity** = the state in which each layer operates according to its own standards, without undue distortion from other layers.  
+**AI Integrity** = the state in which each layer operates according to its own standards, without undue distortion from other layers.
 **Authority Pollution** = upper layers distorting lower layers (e.g., values overriding factual evidence).
 
 ---
@@ -73,6 +73,8 @@ Schwartz's refined theory (2012) decomposes 10 basic values into **19 sub-values
 **Question:** *"Two values conflict in a given professional context. Which value takes priority?"*
 
 Pairs: C(19, 2) = **171 value pairs**
+
+> **Note:** The multi-model comparison (2026-03-16 run) uses L4L — a 10-item aggregated version: Self-Direction, Stimulation, Hedonism, Achievement, Power, Security, Conformity, Tradition, Benevolence, Universalism.
 
 ### L3 — Epistemic Authority (10 Evidence Types)
 
@@ -217,20 +219,19 @@ Each factorial condition is presented from **3 narrative perspectives**:
 
 MED is the most perspective-stable domain; BIZ is the most sensitive to framing shifts.
 
-#### Perspective Bias Signals
+---
 
-The most pronounced perspective-dependent shifts were observed in:
+## Multi-Model Comparison: 2026-03-16
 
-- **Self-Direction-Action**: v2 (institutional manager) selects this value significantly less (0.458) than v1 (0.625) or v3 (0.667) — institutional framing suppresses action-autonomy.
-- **Security-Personal**: v3 (frontline practitioner) completely suppresses this value (0.000) compared to v2 (0.125) — practitioners deprioritize personal security framing.
+The latest run evaluates **3 models** across all 3 PRISM layers (L4L/L3/L2):
 
-#### Most Unstable Conditions (PCS = 0.67)
+| Model | L4L Records | L3 Records | L2 Records |
+|-------|------------|------------|------------|
+| `claude-haiku-4-5-20251001` | 17,596 | 18,881 | 18,250 |
+| `deepseek-v3.2` | 18,900 | 18,900 | 18,900 |
+| `grok-4.1-fast` | 18,896 | 18,900 | 18,896 |
 
-8 of 10 lowest-PCS conditions occur in the **BIZ** domain, concentrated in two value pairs:
-- **Security-Personal vs. Security-Societal** — intra-conservation conflict
-- **Self-Direction-Thought vs. Self-Direction-Action** — intra-autonomy conflict
-
-These intra-value-family pairs represent the frontier of measurement sensitivity: the 19 sub-value decomposition reveals distinctions that are conceptually valid but empirically fragile under perspective shifts.
+The [interactive viewer](https://ai-integrity.github.io/aio-prism-benchmark/) displays side-by-side model comparison with color-coded win-rate bars, filterable by domain, severity, time horizon, and benchmark date.
 
 ---
 
@@ -238,23 +239,11 @@ These intra-value-family pairs represent the frontier of measurement sensitivity
 
 | Layer | Model(s) | Status |
 |---|---|---|
-| **L4** (19 sub-values) | `gemini-3.1-flash-lite-preview` | ✅ Complete |
+| **L4** (19 sub-values) | `gemini-3.1-flash-lite-preview` | ✅ Complete (328,860 scenarios) |
 | **L3** (10 evidence types) | `gemini-3.1-flash-lite-preview` | ✅ Complete |
 | **L2** (10 source types) | `gemini-3.1-flash-lite-preview` | ✅ Complete |
 | **PCS** (perspective consistency) | `gemini-3.1-flash-lite-preview` | ✅ Complete (648 responses) |
-| **Additional models** | — | 🔧 Planned |
-
----
-
-## Interactive Viewer
-
-**[→ GitHub Pages Viewer](https://ai-integrity.github.io/aio-prism-benchmark/)**
-
-Filter by layer (L2/L3/L4), domain, severity, and timeframe to explore win-rate rankings.
-
-**[→ Dashboard at aioq.org](https://aioq.org/en/benchmarks?tab=prism)**
-
-Full interactive dashboard with cross-layer analysis.
+| **L4L/L3/L2** (multi-model) | `claude-haiku-4-5`, `deepseek-v3.2`, `grok-4.1-fast` | ✅ Complete (2026-03-16) |
 
 ---
 
@@ -265,13 +254,142 @@ aio-prism-benchmark/
 ├── README.md
 ├── LICENSE
 ├── CITATION.cff
-├── docs/                          # GitHub Pages interactive viewer
-│   └── index.html
-└── data/                          # Benchmark data (planned)
-    ├── L4-normative/
-    ├── L3-epistemic/
-    ├── L2-source/
-    └── PCS/
+├── PRISM_TRACKING_GUIDE.md              # Detailed analysis guide (Korean)
+│
+└── docs/                                # GitHub Pages root
+    ├── index.html                       # Live dashboard (multi-model comparison)
+    │
+    └── data/
+        ├── runs.json                    # Manifest: available dates & models
+        │
+        ├── runs/                        # Date-based benchmark results (for dashboard)
+        │   └── 20260316/
+        │       ├── claude-haiku-4-5-20251001/
+        │       │   ├── rankings_L2.json
+        │       │   ├── rankings_L3.json
+        │       │   └── rankings_L4L.json
+        │       ├── deepseek-v3.2/
+        │       │   └── ...
+        │       └── grok-4.1-fast/
+        │           └── ...
+        │
+        ├── input_data/                  # Evaluation scenarios (JSONL)
+        │   ├── eval_batch_L2.jsonl          # 56 MB — L2 source authority scenarios
+        │   ├── eval_batch_L3.jsonl          # 54 MB — L3 epistemic quality scenarios
+        │   └── eval_batch_L4L.jsonl         # 49 MB — L4 normative value scenarios
+        │
+        ├── output_raw/                  # Raw model API responses
+        │   ├── 20260316_claude-haiku-4-5-20251001_L2.json
+        │   ├── 20260316_claude-haiku-4-5-20251001_L3.json
+        │   ├── 20260316_claude-haiku-4-5-20251001_L4L.json
+        │   ├── 20260316_deepseek-v3.2_L2.json
+        │   ├── 20260316_deepseek-v3.2_L3.json
+        │   ├── 20260316_deepseek-v3.2_L4L.json
+        │   ├── 20260316_grok-4.1-fast_L2.json
+        │   ├── 20260316_grok-4.1-fast_L3.json
+        │   └── 20260316_grok-4.1-fast_L4L.json
+        │
+        ├── output_analysis/             # Processed rankings per model
+        │   ├── claude-haiku-4-5-20251001/
+        │   │   ├── rankings_L2.json
+        │   │   ├── rankings_L3.json
+        │   │   └── rankings_L4L.json
+        │   ├── deepseek-v3.2/
+        │   │   └── ...
+        │   └── grok-4.1-fast/
+        │       └── ...
+        │
+        ├── rankings_L2.json             # Legacy: gemini-3.1-flash-lite baseline
+        ├── rankings_L3.json
+        └── rankings_L4.json
+```
+
+### Data Folders
+
+| Folder | Contents | Size | Purpose |
+|--------|----------|------|---------|
+| `data/input_data/` | `.jsonl` scenario files | ~159 MB | Evaluation prompts — each line is a forced-choice conflict scenario with domain, severity, time, and variant metadata |
+| `data/output_raw/` | Raw API response JSON | ~79 MB | Full model responses including decisions, confidence scores, and reasoning |
+| `data/output_analysis/` | Processed ranking JSON | ~30 MB | Win-rate rankings aggregated by domain, severity, time, and variant dimensions |
+| `data/runs/` | Dashboard-ready rankings | ~30 MB | Same as output_analysis, organized by date for the live dashboard |
+| `data/rankings_L*.json` | Legacy baseline rankings | ~25 MB | Original gemini-3.1-flash-lite-preview single-model results |
+
+### Ranking JSON Structure
+
+Each ranking file contains:
+
+```json
+{
+  "meta": {
+    "layer": "L2",
+    "model": "claude-haiku-4-5-20251001",
+    "date": "20260316",
+    "valid_records": 18250,
+    "variables": ["S1-International-body", "..."]
+  },
+  "by_severity": {
+    "MED|ALL|ALL|ALL": [
+      {
+        "variable": "S7-Alternative-independent-media",
+        "wins": 1234,
+        "total": 2345,
+        "win_rate": 0.5264,
+        "avg_confidence": 0.8123,
+        "rank": 1
+      }
+    ]
+  }
+}
+```
+
+Key format: `{domain}|{severity}|{time}|{variant}`
+
+---
+
+## Interactive Viewer
+
+**[→ GitHub Pages Viewer](https://ai-integrity.github.io/aio-prism-benchmark/)**
+
+Features:
+- **Date selector** — switch between benchmark runs
+- **Multi-model comparison** — side-by-side win-rate bars for all evaluated models
+- **Filters** — domain, severity, time horizon, top N
+- **Framing sensitivity analysis** — per-model divergence report
+
+**[→ Dashboard at aioq.org](https://aioq.org/en/benchmarks?tab=prism)**
+
+Full interactive dashboard with cross-layer analysis.
+
+### Run Locally
+
+```bash
+git clone https://github.com/AI-Integrity/aio-prism-benchmark.git
+cd aio-prism-benchmark/docs
+python3 -m http.server 8090
+# Open http://localhost:8090
+```
+
+### Add a New Benchmark Run
+
+1. Run evaluation and produce ranking JSONs for each model/layer
+2. Create a date folder: `docs/data/runs/{YYYYMMDD}/{model-id}/`
+3. Place `rankings_L2.json`, `rankings_L3.json`, `rankings_L4L.json` in each model folder
+4. Update `docs/data/runs.json`:
+
+```json
+{
+  "dates": [
+    {
+      "date": "20260316",
+      "label": "2026-03-16",
+      "models": [
+        { "id": "claude-haiku-4-5-20251001", "short": "Claude Haiku 4.5" },
+        { "id": "deepseek-v3.2", "short": "DeepSeek V3.2" },
+        { "id": "grok-4.1-fast", "short": "Grok 4.1 Fast" }
+      ]
+    }
+  ]
+}
 ```
 
 ---
@@ -319,8 +437,8 @@ This work is licensed under [CC BY 4.0](https://creativecommons.org/licenses/by/
 
 ## Contact
 
-**AI Integrity Organization (AIO)**  
-Geneva, Switzerland  
-Website: [aioq.org](https://aioq.org)  
-Email: 2sk@aioq.org  
+**AI Integrity Organization (AIO)**
+Geneva, Switzerland
+Website: [aioq.org](https://aioq.org)
+Email: 2sk@aioq.org
 GitHub: [github.com/AI-Integrity](https://github.com/AI-Integrity)

@@ -1,0 +1,13 @@
+{
+  "dates": [
+    {
+      "date": "20260316",
+      "label": "2026-03-16",
+      "models": [
+        { "id": "claude-haiku-4-5-20251001", "short": "Claude Haiku 4.5" },
+        { "id": "deepseek-v3.2", "short": "DeepSeek V3.2" },
+        { "id": "grok-4.1-fast", "short": "Grok 4.1 Fast" }
+      ]
+    }
+  ]
+}

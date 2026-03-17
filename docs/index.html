@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>AIO PRISM Benchmark — Multi-Layer Rankings &amp; Analysis</title>
+  <title>AIO PRISM Benchmark — Multi-Model Comparison</title>
   <style>
     :root,
     [data-theme="dark"] {
@@ -22,7 +22,10 @@
       --blue: #60a5fa; --blue-bg: rgba(96,165,250,0.08); --blue-border: rgba(96,165,250,0.2);
       --radius: 10px;
       --header-bg: linear-gradient(135deg, #0f1117 0%, #1a1d27 100%);
-      --select-arrow: %238b90a8;
+      --model1: #38bdf8; --model1-bg: rgba(56,189,248,0.85);
+      --model2: #34d399; --model2-bg: rgba(52,211,153,0.85);
+      --model3: #a78bfa; --model3-bg: rgba(167,139,250,0.85);
+      --model4: #fbbf24; --model4-bg: rgba(251,191,36,0.85);
     }
 
     [data-theme="light"] {
@@ -40,7 +43,10 @@
       --green: #047857; --green-bg: rgba(4,120,87,0.06); --green-border: rgba(4,120,87,0.15);
       --blue: #1d4ed8; --blue-bg: rgba(29,78,216,0.06); --blue-border: rgba(29,78,216,0.15);
       --header-bg: linear-gradient(135deg, #ffffff 0%, #f0f2f7 100%);
-      --select-arrow: %235a5f7a;
+      --model1: #0284c7; --model1-bg: rgba(2,132,199,0.85);
+      --model2: #047857; --model2-bg: rgba(4,120,87,0.85);
+      --model3: #6d28d9; --model3-bg: rgba(109,40,217,0.85);
+      --model4: #b45309; --model4-bg: rgba(180,83,9,0.85);
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -49,101 +55,147 @@
       background: var(--bg);
       color: var(--text);
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
-      font-size: 15px;
-      line-height: 1.6;
+      font-size: 14px;
       min-height: 100vh;
     }
 
     header {
       background: var(--header-bg);
       border-bottom: 1px solid var(--border);
-      padding: 24px 40px;
-      display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px;
+      padding: 20px 32px;
+      display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;
     }
-    .logo-area h1 { font-size: 22px; font-weight: 800; letter-spacing: -0.5px; }
+    .logo-area h1 { font-size: 18px; font-weight: 700; letter-spacing: -0.3px; }
     .logo-area h1 span { color: var(--accent); }
-    .logo-area p { font-size: 13px; color: var(--text2); margin-top: 4px; }
-    .header-links { display: flex; align-items: center; gap: 4px; }
-    .header-links a { color: var(--text2); text-decoration: none; font-size: 13px; margin-left: 20px; transition: color 0.15s; }
+    .logo-area p { font-size: 12px; color: var(--text2); margin-top: 3px; }
+    .header-links { display: flex; align-items: center; gap: 0; }
+    .header-links a { color: var(--text2); text-decoration: none; font-size: 12px; margin-left: 16px; transition: color 0.15s; }
     .header-links a:hover { color: var(--text); }
 
-    .container { max-width: 1280px; margin: 0 auto; padding: 40px 32px; }
+    .container { max-width: 1400px; margin: 0 auto; padding: 28px 24px; }
+
+    /* Filters */
+    .filter-bar {
+      display: flex; gap: 16px; flex-wrap: wrap; align-items: center;
+      margin-bottom: 20px; padding: 14px 18px;
+      background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+    }
+    .filter-group { display: flex; align-items: center; gap: 8px; }
+    .filter-group label { font-size: 11px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: 0.5px; }
+    .filter-group select {
+      background: var(--surface2); border: 1px solid var(--border); border-radius: 6px;
+      color: var(--text); font-size: 12px; padding: 6px 28px 6px 10px; cursor: pointer; appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%238b90a8'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right 8px center; transition: border-color 0.15s;
+    }
+    .filter-group select:focus { outline: none; border-color: var(--accent); }
+    .filter-separator { width: 1px; height: 24px; background: var(--border); margin: 0 4px; }
+
+    /* Date badge */
+    .date-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-size: 11px; font-weight: 600; color: var(--accent);
+      background: var(--blue-bg); border: 1px solid var(--blue-border);
+      border-radius: 6px; padding: 4px 10px;
+    }
+    .date-badge .model-count { color: var(--text2); font-weight: 400; }
+
+    /* Legend */
+    .legend-bar {
+      display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+      margin-bottom: 16px; padding: 10px 16px;
+      background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+      font-size: 12px;
+    }
+    .legend-title { font-weight: 700; color: var(--text2); margin-right: 4px; }
+    .legend-item { display: inline-flex; align-items: center; gap: 6px; }
+    .legend-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+    .legend-model { color: var(--text); font-weight: 500; }
+
+    /* Section title */
+    .section-title { font-size: 13px; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 12px; }
+
+    /* Domain x Layer Grid Table */
+    .domain-grid-table { width: 100%; border-collapse: separate; border-spacing: 0; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+    .domain-grid-table th { background: var(--surface2); font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; color: var(--text2); padding: 12px 14px; border-bottom: 1px solid var(--border); text-align: center; }
+    .domain-grid-table th:first-child { text-align: left; width: 100px; }
+    .domain-grid-table td { padding: 10px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
+    .domain-grid-table tr:last-child td { border-bottom: none; }
+    .domain-grid-table tr:hover td { background: var(--surface2); }
+    .domain-grid-table .dg-domain { font-size: 13px; font-weight: 700; white-space: nowrap; }
+    .domain-grid-table .dg-domain-sub { font-size: 10px; color: var(--text3); }
+    .domain-grid-table .dg-cell { min-width: 200px; }
+
+    /* Multi-model entry */
+    .mm-entry { margin-bottom: 8px; }
+    .mm-entry:last-child { margin-bottom: 0; }
+    .mm-row { display: flex; align-items: center; gap: 5px; padding: 1px 0; }
+    .mm-rank { width: 14px; font-size: 10px; font-weight: 700; color: var(--text3); flex-shrink: 0; text-align: center; }
+    .mm-rank.r1 { color: #f5c542; } .mm-rank.r2 { color: #b0bec5; } .mm-rank.r3 { color: #cd7f32; }
+    [data-theme="light"] .mm-rank.r1 { color: #b8860b; }
+    [data-theme="light"] .mm-rank.r2 { color: #6b7280; }
+    [data-theme="light"] .mm-rank.r3 { color: #92400e; }
+    .mm-name { font-size: 10px; flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--text); }
+    .mm-spacer-rank { width: 14px; flex-shrink: 0; }
+    .mm-spacer-name { flex: 1; min-width: 0; }
+    .mm-bar-track { width: 64px; height: 4px; background: var(--surface2); border-radius: 2px; overflow: hidden; flex-shrink: 0; }
+    .mm-bar-fill { height: 100%; border-radius: 2px; }
+    .mm-pct { width: 42px; text-align: right; font-size: 10px; font-weight: 600; color: var(--text2); flex-shrink: 0; }
+    .mm-dash { color: var(--text3); }
+
+    .dg-empty { font-size: 11px; color: var(--text3); font-style: italic; }
 
     /* Analysis Report */
-    .report-section { padding-top: 8px; }
-    .report-section h2 { font-size: 26px; font-weight: 800; margin-bottom: 8px; letter-spacing: -0.5px; }
-    .report-section .report-subtitle { font-size: 14px; color: var(--text2); margin-bottom: 36px; line-height: 1.6; }
-    .report-section h3 { font-size: 15px; font-weight: 700; color: var(--text); text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 16px; margin-top: 48px; padding-bottom: 12px; border-bottom: 1px solid var(--border); }
-    .report-section h3:first-of-type { margin-top: 0; }
-    .report-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px 28px; margin-bottom: 20px; }
+    .report-section { padding-top: 32px; }
+    .report-section h2 { font-size: 18px; font-weight: 800; margin-bottom: 24px; }
+    .report-section h3 { font-size: 13px; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 12px; }
+    .report-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; margin-bottom: 16px; }
     .report-card.red { background: var(--red-bg); border-color: var(--red-border); }
     .report-card.amber { background: var(--amber-bg); border-color: var(--amber-border); }
     .report-card.blue { background: var(--blue-bg); border-color: var(--blue-border); }
-    .report-card h4 { font-size: 15px; font-weight: 700; margin-bottom: 12px; }
+    .report-card h4 { font-size: 13px; font-weight: 700; margin-bottom: 10px; }
     .report-card.red h4 { color: var(--red); }
     .report-card.amber h4 { color: var(--amber); }
     .report-card.blue h4 { color: var(--blue); }
-    .report-card p, .report-card li { font-size: 14px; color: var(--text2); line-height: 1.8; }
-    .report-card ul { padding-left: 20px; }
-    .report-card li { margin-bottom: 8px; }
+    .report-card p, .report-card li { font-size: 13px; color: var(--text2); line-height: 1.7; }
+    .report-card ul { padding-left: 18px; }
+    .report-card li { margin-bottom: 6px; }
 
-    .div-bar-row { display: flex; align-items: center; gap: 14px; padding: 8px 0; }
-    .div-bar-label { width: 100px; flex-shrink: 0; }
-    .div-bar-label .domain-id { font-size: 14px; font-weight: 700; }
-    .div-bar-label .domain-name { font-size: 11px; color: var(--text3); }
-    .div-bar-track { flex: 1; height: 22px; background: var(--surface2); border-radius: 6px; overflow: hidden; }
-    .div-bar-fill { height: 100%; border-radius: 6px; transition: width 0.4s; }
+    .div-bar-row { display: flex; align-items: center; gap: 12px; padding: 6px 0; }
+    .div-bar-label { width: 90px; flex-shrink: 0; }
+    .div-bar-label .domain-id { font-size: 12px; font-weight: 700; }
+    .div-bar-label .domain-name { font-size: 10px; color: var(--text3); }
+    .div-bar-track { flex: 1; height: 18px; background: var(--surface2); border-radius: 4px; overflow: hidden; }
+    .div-bar-fill { height: 100%; border-radius: 4px; transition: width 0.4s; }
     .div-bar-fill.high { background: var(--red); }
     .div-bar-fill.low { background: var(--green); }
     .div-bar-fill.mid { background: var(--text3); }
-    .div-bar-value { width: 80px; text-align: right; font-size: 14px; font-weight: 600; flex-shrink: 0; }
-    .div-bar-badge { font-size: 11px; font-weight: 600; width: 56px; flex-shrink: 0; }
+    .div-bar-value { width: 70px; text-align: right; font-size: 12px; font-weight: 600; flex-shrink: 0; }
+    .div-bar-badge { font-size: 10px; font-weight: 600; width: 50px; flex-shrink: 0; }
     .div-bar-badge.high { color: var(--red); }
     .div-bar-badge.low { color: var(--green); }
 
-    .inv-row { display: flex; align-items: center; gap: 10px; padding: 6px 0; font-size: 13px; }
-    .inv-domain { font-weight: 700; width: 44px; flex-shrink: 0; color: var(--amber); }
-    .inv-layer { width: 28px; flex-shrink: 0; color: var(--text3); }
+    .inv-row { display: flex; align-items: center; gap: 8px; padding: 4px 0; font-size: 12px; }
+    .inv-domain { font-weight: 700; width: 40px; flex-shrink: 0; color: var(--amber); }
+    .inv-layer { width: 24px; flex-shrink: 0; color: var(--text3); }
     .inv-var { flex: 1; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .inv-ranks { flex-shrink: 0; color: var(--text3); }
 
-    .vol-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 10px; }
-    .vol-item { font-size: 13px; }
+    .vol-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 8px; }
+    .vol-item { font-size: 12px; }
     .vol-item .vol-domain { font-weight: 700; }
     .vol-item .vol-std { color: var(--text3); margin-left: 4px; }
 
-    /* Inline filter row for report sections */
-    .report-filters { display: flex; gap: 16px; margin-bottom: 24px; flex-wrap: wrap; align-items: end; }
-    .report-filters .rf-group label { display: block; font-size: 11px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+    /* Report filters */
+    .report-filters { display: flex; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; align-items: end; }
+    .report-filters .rf-group label { display: block; font-size: 10px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
     .report-filters .rf-group select {
-      background: var(--surface2); border: 1px solid var(--border); border-radius: 8px;
-      color: var(--text); font-size: 13px; padding: 9px 32px 9px 12px; cursor: pointer; appearance: none;
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='var(--select-arrow)'/%3E%3C/svg%3E");
-      background-repeat: no-repeat; background-position: right 10px center; transition: border-color 0.15s;
+      background: var(--surface2); border: 1px solid var(--border); border-radius: 6px;
+      color: var(--text); font-size: 12px; padding: 6px 28px 6px 10px; cursor: pointer; appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%238b90a8'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right 8px center; transition: border-color 0.15s;
     }
     .report-filters .rf-group select:focus { outline: none; border-color: var(--accent); }
-
-    /* Domain x Layer Grid Table */
-    .domain-grid-table { width: 100%; border-collapse: separate; border-spacing: 0; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
-    .domain-grid-table th { background: var(--surface2); font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; color: var(--text2); padding: 14px 16px; border-bottom: 1px solid var(--border); text-align: center; }
-    .domain-grid-table th:first-child { text-align: left; width: 120px; }
-    .domain-grid-table td { padding: 14px 16px; border-bottom: 1px solid var(--border); vertical-align: top; }
-    .domain-grid-table tr:last-child td { border-bottom: none; }
-    .domain-grid-table tr:hover td { background: var(--surface2); }
-    .domain-grid-table .dg-domain { font-size: 15px; font-weight: 700; white-space: nowrap; }
-    .domain-grid-table .dg-domain-sub { font-size: 11px; color: var(--text3); margin-top: 2px; }
-    .domain-grid-table .dg-cell { min-width: 200px; }
-    .dg-rank { display: flex; align-items: center; gap: 8px; padding: 3px 0; }
-    .dg-rank-num { width: 18px; font-size: 12px; font-weight: 700; color: var(--text3); flex-shrink: 0; text-align: center; }
-    .dg-rank-num.r1 { color: #f5c542; } .dg-rank-num.r2 { color: #b0bec5; } .dg-rank-num.r3 { color: #cd7f32; }
-    [data-theme="light"] .dg-rank-num.r1 { color: #b8860b; }
-    [data-theme="light"] .dg-rank-num.r2 { color: #6b7280; }
-    [data-theme="light"] .dg-rank-num.r3 { color: #92400e; }
-    .dg-rank-name { font-size: 13px; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .dg-rank-pct { font-size: 13px; font-weight: 600; flex-shrink: 0; width: 50px; text-align: right; }
-    .dg-bar { height: 4px; background: var(--surface2); border-radius: 2px; overflow: hidden; margin-top: 2px; }
-    .dg-bar-fill { height: 100%; border-radius: 2px; }
-    .dg-empty { font-size: 13px; color: var(--text3); font-style: italic; }
 
     @media (max-width: 900px) {
       .domain-grid-table { display: block; overflow-x: auto; }
@@ -153,21 +205,19 @@
     .state-msg { text-align: center; padding: 60px 20px; color: var(--text2); }
     .state-msg .icon { font-size: 32px; margin-bottom: 12px; }
     .state-msg p { font-size: 14px; }
-    .state-msg code { background: var(--surface2); padding: 2px 6px; border-radius: 4px; font-size: 12px; }
 
-    footer { text-align: center; padding: 40px 20px; font-size: 13px; color: var(--text3); border-top: 1px solid var(--border); margin-top: 60px; }
+    footer { text-align: center; padding: 32px 20px; font-size: 12px; color: var(--text3); border-top: 1px solid var(--border); margin-top: 40px; }
     footer a { color: var(--text2); text-decoration: none; }
     footer a:hover { color: var(--text); }
 
     .theme-toggle {
       background: var(--surface2); border: 1px solid var(--border); border-radius: 20px;
-      padding: 8px 16px; cursor: pointer; display: flex; align-items: center; gap: 6px;
-      color: var(--text2); font-size: 13px; transition: all 0.2s; white-space: nowrap;
+      padding: 6px 14px; cursor: pointer; display: flex; align-items: center; gap: 6px;
+      color: var(--text2); font-size: 12px; transition: all 0.2s; white-space: nowrap;
     }
     .theme-toggle:hover { border-color: var(--accent); color: var(--text); }
-    .theme-toggle .icon { font-size: 15px; }
+    .theme-toggle .icon { font-size: 14px; }
 
-    /* Loading spinner */
     .spinner { width: 32px; height: 32px; border: 3px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 12px; }
     @keyframes spin { to { transform: rotate(360deg); } }
 
@@ -182,7 +232,7 @@
 <header>
   <div class="logo-area">
     <h1><span>AIO PRISM</span> Benchmark</h1>
-    <p>Multi-layer rankings &middot; L2 Source &middot; L3 Epistemic &middot; L4 Normative &middot; gemini-3.1-flash-lite-preview</p>
+    <p>Multi-model comparison &middot; L2 Source &middot; L3 Epistemic &middot; L4 Normative</p>
   </div>
   <div class="header-links">
     <button class="theme-toggle" id="theme-toggle" title="Toggle light/dark mode">
@@ -197,30 +247,102 @@
 
 <div class="container">
 
-  <!-- Hidden elements for JS compatibility -->
-  <div style="display:none;">
-    <select id="sel-dimension"><option value="by_severity" selected></option></select>
-    <select id="sel-domain"><option value="ALL" selected></option></select>
-    <select id="sel-severity"><option value="ALL" selected></option></select>
-    <select id="sel-scale"><option value="ALL" selected></option></select>
-    <select id="sel-time"><option value="ALL" selected></option></select>
-    <select id="sel-variant"><option value="ALL" selected></option></select>
-    <span id="key-display"></span>
-    <span id="sample-count"></span>
-    <div id="fg-severity"></div>
-    <div id="fg-scale"></div>
-  </div>
-
   <!-- Loading state -->
-  <div id="results-area">
+  <div id="loading-area">
     <div class="state-msg">
       <div class="spinner"></div>
       <p>Loading benchmark data...</p>
     </div>
   </div>
 
-  <!-- Analysis Report (dynamically populated) -->
-  <div id="analysis-report"></div>
+  <!-- Main content (hidden until loaded) -->
+  <div id="main-content" style="display:none;">
+
+    <!-- Filters -->
+    <div class="filter-bar">
+      <div class="filter-group">
+        <label>Date</label>
+        <select id="sel-date"></select>
+      </div>
+      <div class="filter-separator"></div>
+      <div class="filter-group">
+        <label>Domain</label>
+        <select id="sel-domain">
+          <option value="ALL">All Domains</option>
+          <option value="MED">MED - Medical</option>
+          <option value="BIZ">BIZ - Business</option>
+          <option value="TECH">TECH - Technology</option>
+          <option value="EDU">EDU - Education</option>
+          <option value="LAW">LAW - Legal</option>
+          <option value="DEF">DEF - Defense</option>
+          <option value="CARE">CARE - Care</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label>Severity</label>
+        <select id="sel-severity">
+          <option value="ALL">All Severities</option>
+          <optgroup label="Individual">
+            <option value="1-1">1-1 Individual / Reversible</option>
+            <option value="1-2">1-2 Individual / Partial</option>
+            <option value="1-3">1-3 Individual / Irreversible</option>
+          </optgroup>
+          <optgroup label="Relational">
+            <option value="2-1">2-1 Relational / Reversible</option>
+            <option value="2-2">2-2 Relational / Partial</option>
+            <option value="2-3">2-3 Relational / Irreversible</option>
+          </optgroup>
+          <optgroup label="Group">
+            <option value="3-1">3-1 Group / Reversible</option>
+            <option value="3-2">3-2 Group / Partial</option>
+            <option value="3-3">3-3 Group / Irreversible</option>
+          </optgroup>
+          <optgroup label="Societal">
+            <option value="4-1">4-1 Societal / Reversible</option>
+            <option value="4-2">4-2 Societal / Partial</option>
+            <option value="4-3">4-3 Societal / Irreversible</option>
+          </optgroup>
+          <optgroup label="Global">
+            <option value="5-1">5-1 Global / Reversible</option>
+            <option value="5-2">5-2 Global / Partial</option>
+            <option value="5-3">5-3 Global / Irreversible</option>
+          </optgroup>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label>Time Horizon</label>
+        <select id="sel-time">
+          <option value="ALL">All Time Horizons</option>
+          <option value="1">Immediate (24 h)</option>
+          <option value="2">Short-term (1 yr)</option>
+          <option value="3">Long-term (10+ yr)</option>
+          <option value="4">Permanent / Generational</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label>Top N</label>
+        <select id="sel-topn">
+          <option value="5">Top 5</option>
+          <option value="10" selected>Top 10</option>
+          <option value="15">Top 15</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Legend -->
+    <div class="legend-bar" id="legend-bar">
+      <span class="legend-title">Legend</span>
+    </div>
+
+    <!-- Comparison title -->
+    <div class="section-title" id="compare-title">Unified Multi-Model Comparison</div>
+
+    <!-- Grid table -->
+    <div id="grid-container"></div>
+
+    <!-- Analysis Report -->
+    <div id="analysis-report"></div>
+  </div>
 
 </div>
 
@@ -236,172 +358,320 @@
 <script>
 // === Constants ===============================================================
 
-const DATA_URLS = { L2: 'data/rankings_L2.json', L3: 'data/rankings_L3.json', L4: 'data/rankings_L4.json' };
+const MODEL_COLORS = ['--model1', '--model2', '--model3', '--model4'];
+
+const LAYER_KEYS = ['L4', 'L3', 'L2'];
+const LAYER_FILE_MAP = { L4: 'rankings_L4L.json', L3: 'rankings_L3.json', L2: 'rankings_L2.json' };
 const LAYER_INFO = {
-  L2: { title: 'L2 — Source Authority', desc: 'Who says it?', short: 'Source' },
-  L3: { title: 'L3 — Epistemic Quality', desc: 'How do we know?', short: 'Epistemic' },
-  L4: { title: 'L4 — Normative Values', desc: 'What matters?', short: 'Normative' },
+  L4: { title: 'L4 — Values', desc: 'What matters?' },
+  L3: { title: 'L3 — Epistemic', desc: 'How do we know?' },
+  L2: { title: 'L2 — Source', desc: 'Who says it?' },
 };
+
 const DOMAINS = ['MED','BIZ','TECH','EDU','LAW','DEF','CARE'];
 const DOMAIN_NAMES = { MED:'Medical', BIZ:'Business', TECH:'Technology', EDU:'Education', LAW:'Legal', DEF:'Defense', CARE:'Care' };
 
-const VAR_COLORS = {
-  'S1-International-body':{t:'#60a5fa',b:'linear-gradient(90deg,#2563eb,#3b82f6)'},
-  'S2-Government-regulatory':{t:'#818cf8',b:'linear-gradient(90deg,#4338ca,#6366f1)'},
-  'S3-Academic-peer-reviewed':{t:'#34d399',b:'linear-gradient(90deg,#047857,#10b981)'},
-  'S4-Industry-corporate':{t:'#fbbf24',b:'linear-gradient(90deg,#b45309,#f59e0b)'},
-  'S5-Independent-expert':{t:'#a78bfa',b:'linear-gradient(90deg,#6d28d9,#8b5cf6)'},
-  'S6-Mainstream-media':{t:'#38bdf8',b:'linear-gradient(90deg,#0369a1,#0ea5e9)'},
-  'S7-Alternative-independent-media':{t:'#fb7185',b:'linear-gradient(90deg,#be123c,#f43f5e)'},
-  'S8-Community-civil-society':{t:'#4ade80',b:'linear-gradient(90deg,#15803d,#22c55e)'},
-  'S9-Direct-stakeholder':{t:'#22d3ee',b:'linear-gradient(90deg,#0e7490,#06b6d4)'},
-  'S10-Anonymous-crowdsourced':{t:'#94a3b8',b:'linear-gradient(90deg,#475569,#64748b)'},
-  'E1-Systematic-synthesis':{t:'#60a5fa',b:'linear-gradient(90deg,#1d4ed8,#3b82f6)'},
-  'E2-Controlled-experiment':{t:'#34d399',b:'linear-gradient(90deg,#047857,#10b981)'},
-  'E3-Statistical-correlational':{t:'#a78bfa',b:'linear-gradient(90deg,#6d28d9,#8b5cf6)'},
-  'E4-Causal-mechanistic':{t:'#fb923c',b:'linear-gradient(90deg,#c2410c,#f97316)'},
-  'E5-Analogical-comparative':{t:'#f472b6',b:'linear-gradient(90deg,#be185d,#ec4899)'},
-  'E6-Case-based':{t:'#2dd4bf',b:'linear-gradient(90deg,#0f766e,#14b8a6)'},
-  'E7-Sign-pattern':{t:'#facc15',b:'linear-gradient(90deg,#a16207,#eab308)'},
-  'E8-Expert-judgment':{t:'#818cf8',b:'linear-gradient(90deg,#4338ca,#6366f1)'},
-  'E9-Experiential-qualitative':{t:'#fb7185',b:'linear-gradient(90deg,#be123c,#f43f5e)'},
-  'E10-Popular-consensus':{t:'#94a3b8',b:'linear-gradient(90deg,#475569,#64748b)'},
-  'Security-societal':{t:'#60a5fa',b:'linear-gradient(90deg,#1d4ed8,#3b82f6)'},
-  'Security-personal':{t:'#38bdf8',b:'linear-gradient(90deg,#0369a1,#0ea5e9)'},
-  'Universalism-concern':{t:'#2dd4bf',b:'linear-gradient(90deg,#0f766e,#14b8a6)'},
-  'Universalism-nature':{t:'#34d399',b:'linear-gradient(90deg,#047857,#10b981)'},
-  'Universalism-tolerance':{t:'#4ade80',b:'linear-gradient(90deg,#15803d,#22c55e)'},
-  'Benevolence-caring':{t:'#22d3ee',b:'linear-gradient(90deg,#0e7490,#06b6d4)'},
-  'Benevolence-dependability':{t:'#67e8f9',b:'linear-gradient(90deg,#155e75,#22d3ee)'},
-  'Self-direction-thought':{t:'#a78bfa',b:'linear-gradient(90deg,#6d28d9,#8b5cf6)'},
-  'Self-direction-action':{t:'#c084fc',b:'linear-gradient(90deg,#7e22ce,#a855f7)'},
-  'Humility':{t:'#818cf8',b:'linear-gradient(90deg,#4338ca,#6366f1)'},
-  'Conformity-rules':{t:'#94a3b8',b:'linear-gradient(90deg,#475569,#64748b)'},
-  'Conformity-interpersonal':{t:'#a1a1aa',b:'linear-gradient(90deg,#52525b,#71717a)'},
-  'Power-resources':{t:'#f87171',b:'linear-gradient(90deg,#b91c1c,#ef4444)'},
-  'Power-dominance':{t:'#fb923c',b:'linear-gradient(90deg,#c2410c,#f97316)'},
-  'Achievement':{t:'#fbbf24',b:'linear-gradient(90deg,#b45309,#f59e0b)'},
-  'Tradition':{t:'#d97706',b:'linear-gradient(90deg,#92400e,#b45309)'},
-  'Stimulation':{t:'#f472b6',b:'linear-gradient(90deg,#be185d,#ec4899)'},
-  'Face':{t:'#fb7185',b:'linear-gradient(90deg,#be123c,#f43f5e)'},
-  'Hedonism':{t:'#e879f9',b:'linear-gradient(90deg,#86198f,#d946ef)'},
-};
-const VAR_COLORS_LIGHT = {
-  'S1-International-body':'#1d4ed8','S2-Government-regulatory':'#3730a3','S3-Academic-peer-reviewed':'#047857',
-  'S4-Industry-corporate':'#92400e','S5-Independent-expert':'#5b21b6','S6-Mainstream-media':'#075985',
-  'S7-Alternative-independent-media':'#9f1239','S8-Community-civil-society':'#166534',
-  'S9-Direct-stakeholder':'#155e75','S10-Anonymous-crowdsourced':'#334155',
-  'E1-Systematic-synthesis':'#1d4ed8','E2-Controlled-experiment':'#047857',
-  'E3-Statistical-correlational':'#5b21b6','E4-Causal-mechanistic':'#9a3412',
-  'E5-Analogical-comparative':'#9d174d','E6-Case-based':'#115e59',
-  'E7-Sign-pattern':'#854d0e','E8-Expert-judgment':'#3730a3',
-  'E9-Experiential-qualitative':'#9f1239','E10-Popular-consensus':'#334155',
-  'Security-societal':'#1d4ed8','Security-personal':'#075985','Universalism-concern':'#115e59',
-  'Universalism-nature':'#047857','Universalism-tolerance':'#166534','Benevolence-caring':'#155e75',
-  'Benevolence-dependability':'#164e63','Self-direction-thought':'#5b21b6','Self-direction-action':'#6b21a8',
-  'Humility':'#3730a3','Conformity-rules':'#334155','Conformity-interpersonal':'#3f3f46',
-  'Power-resources':'#b91c1c','Power-dominance':'#9a3412','Achievement':'#92400e','Tradition':'#78350f',
-  'Stimulation':'#9d174d','Face':'#9f1239','Hedonism':'#86198f',
-};
-
-function getVarTextColor(v) {
-  const t = document.documentElement.getAttribute('data-theme') || 'dark';
-  if (t === 'light' && VAR_COLORS_LIGHT[v]) return VAR_COLORS_LIGHT[v];
-  return VAR_COLORS[v]?.t || '#8b90a8';
+function displayName(v) {
+  return v.replace(/^[SE]\d+-/,'').replace(/-/g,' ').replace(/\b\w/g, c => c.toUpperCase());
 }
-function getVarBarGradient(v) { return VAR_COLORS[v]?.b || 'linear-gradient(90deg,#475569,#64748b)'; }
-function displayName(v) { return v.replace(/^[SE]\d+-/,'').replace(/-/g,' ').replace(/\b\w/g,c=>c.toUpperCase()); }
 function pct(n) { return (n * 100).toFixed(1) + '%'; }
+function dateLabel(d) { return d.length === 8 ? `${d.slice(0,4)}-${d.slice(4,6)}-${d.slice(6,8)}` : d; }
 
 // === State ===================================================================
-const layerData = {};
-let loadedCount = 0;
 
-// === Load Data ===============================================================
-async function loadAllData() {
-  const area = document.getElementById('results-area');
+let runsManifest = null;   // parsed runs.json
+let currentModels = [];    // models for current date: [{id, short, color}]
+let modelData = [];        // modelData[modelIdx][layer] = parsed JSON
+
+// === Load Manifest ===========================================================
+
+async function boot() {
+  const loadingArea = document.getElementById('loading-area');
   try {
-    const promises = Object.entries(DATA_URLS).map(async ([layer, url]) => {
-      const res = await fetch(url);
-      if (!res.ok) throw new Error(`${layer}: HTTP ${res.status}`);
-      layerData[layer] = await res.json();
-      loadedCount++;
-      area.innerHTML = `<div class="state-msg"><div class="spinner"></div><p>Loading... ${loadedCount}/3 layers</p></div>`;
+    const res = await fetch('data/runs.json');
+    if (!res.ok) throw new Error(`runs.json: HTTP ${res.status}`);
+    runsManifest = await res.json();
+
+    // Sort dates descending (newest first)
+    runsManifest.dates.sort((a, b) => b.date.localeCompare(a.date));
+
+    // Populate date selector
+    const dateSel = document.getElementById('sel-date');
+    runsManifest.dates.forEach((run, idx) => {
+      const opt = document.createElement('option');
+      opt.value = run.date;
+      opt.textContent = `${dateLabel(run.date)}  (${run.models.length} models)`;
+      dateSel.appendChild(opt);
     });
-    await Promise.all(promises);
-    area.style.display = 'none';
-    renderAnalysisReport();
+
+    // Select most recent date (first in sorted list)
+    dateSel.value = runsManifest.dates[0].date;
+
+    // Load data for selected date
+    await loadDateData(runsManifest.dates[0].date);
+
+    // Bind date change
+    dateSel.addEventListener('change', async () => {
+      document.getElementById('grid-container').innerHTML = '';
+      document.getElementById('analysis-report').innerHTML = '';
+      document.getElementById('legend-bar').innerHTML = '<span class="legend-title">Loading...</span>';
+      await loadDateData(dateSel.value);
+    });
+
   } catch (e) {
-    area.innerHTML = `<div class="state-msg"><div class="icon">!</div><p>Could not load data.</p><p style="margin-top:8px;font-size:11px;color:var(--text3)">${e.message}</p></div>`;
+    loadingArea.innerHTML = `<div class="state-msg"><div class="icon">!</div><p>Could not load data.</p><p style="margin-top:8px;font-size:11px;color:var(--text3)">${e.message}</p></div>`;
   }
 }
 
-// === Key Builder =============================================================
-function buildKeyWith(domain, severity, time, variant) {
-  return `${domain}|${severity}|${time}|${variant}`;
+// === Load Date Data ==========================================================
+
+async function loadDateData(dateKey) {
+  const loadingArea = document.getElementById('loading-area');
+  const mainContent = document.getElementById('main-content');
+
+  const run = runsManifest.dates.find(r => r.date === dateKey);
+  if (!run) return;
+
+  // Set up current models
+  currentModels = run.models.map((m, i) => ({
+    id: m.id,
+    short: m.short,
+    color: MODEL_COLORS[i % MODEL_COLORS.length],
+  }));
+
+  modelData = currentModels.map(() => ({}));
+
+  const totalToLoad = currentModels.length * LAYER_KEYS.length;
+  let loaded = 0;
+
+  loadingArea.style.display = '';
+  loadingArea.innerHTML = `<div class="state-msg"><div class="spinner"></div><p>Loading... 0/${totalToLoad} files</p></div>`;
+  mainContent.style.display = 'none';
+
+  try {
+    const promises = [];
+
+    currentModels.forEach((model, mIdx) => {
+      LAYER_KEYS.forEach(layer => {
+        const url = `data/runs/${dateKey}/${model.id}/${LAYER_FILE_MAP[layer]}`;
+        promises.push(
+          fetch(url).then(res => {
+            if (!res.ok) throw new Error(`${model.short} ${layer}: HTTP ${res.status}`);
+            return res.json();
+          }).then(json => {
+            modelData[mIdx][layer] = json;
+            loaded++;
+            loadingArea.innerHTML = `<div class="state-msg"><div class="spinner"></div><p>Loading... ${loaded}/${totalToLoad} files</p></div>`;
+          })
+        );
+      });
+    });
+
+    await Promise.all(promises);
+    loadingArea.style.display = 'none';
+    mainContent.style.display = '';
+
+    renderLegend();
+    renderGrid();
+    renderAnalysisReport();
+  } catch (e) {
+    loadingArea.innerHTML = `<div class="state-msg"><div class="icon">!</div><p>Could not load data for ${dateLabel(dateKey)}.</p><p style="margin-top:8px;font-size:11px;color:var(--text3)">${e.message}</p></div>`;
+    mainContent.style.display = '';
+  }
 }
 
-function getRankingsForKey(layer, key) {
-  const data = layerData[layer];
-  if (!data) return null;
-  const dim = document.getElementById('sel-dimension').value;
-  const bucket = data[dim];
-  if (!bucket) return null;
-  return bucket[key] || null;
+// === Data Access =============================================================
+
+function getRankings(modelIdx, layer, domain, severity, time, variant) {
+  const data = modelData[modelIdx]?.[layer];
+  if (!data) return [];
+  const key = `${domain}|${severity}|${time}|${variant}`;
+  const bucket = data.by_severity || {};
+  return bucket[key] || [];
+}
+
+// === Legend ===================================================================
+
+function renderLegend() {
+  const bar = document.getElementById('legend-bar');
+  let html = '<span class="legend-title">Legend</span>';
+  currentModels.forEach(model => {
+    html += `<span class="legend-item">
+      <span class="legend-dot" style="background:var(${model.color})"></span>
+      <span class="legend-model">${model.short}</span>
+    </span>`;
+  });
+  bar.innerHTML = html;
+}
+
+// === Multi-Model Grid ========================================================
+
+function renderGrid() {
+  const container = document.getElementById('grid-container');
+  const domainFilter = document.getElementById('sel-domain').value;
+  const severity = document.getElementById('sel-severity').value;
+  const time = document.getElementById('sel-time').value;
+  const topN = parseInt(document.getElementById('sel-topn').value) || 10;
+  const variant = 'ALL';
+
+  const visibleDomains = domainFilter === 'ALL' ? DOMAINS : DOMAINS.filter(d => d === domainFilter);
+
+  let html = `<table class="domain-grid-table"><thead><tr>
+    <th>Domain</th>
+    ${LAYER_KEYS.map(l => `<th>${LAYER_INFO[l].title}</th>`).join('')}
+  </tr></thead><tbody>`;
+
+  for (const domain of visibleDomains) {
+    html += `<tr><td><div class="dg-domain">${domain}</div><div class="dg-domain-sub">${DOMAIN_NAMES[domain] || domain}</div></td>`;
+
+    for (const layer of LAYER_KEYS) {
+      let anchorIdx = 0, anchorLen = 0;
+      currentModels.forEach((_, mIdx) => {
+        const r = getRankings(mIdx, layer, domain, severity, time, variant);
+        if (r.length > anchorLen) { anchorLen = r.length; anchorIdx = mIdx; }
+      });
+
+      const anchorRankings = getRankings(anchorIdx, layer, domain, severity, time, variant);
+      const sorted = [...anchorRankings].sort((a, b) => a.rank - b.rank).slice(0, topN);
+      const hasAnyData = currentModels.some((_, mIdx) => getRankings(mIdx, layer, domain, severity, time, variant).length > 0);
+
+      html += `<td class="dg-cell">`;
+
+      if (!hasAnyData) {
+        html += `<div class="dg-empty">No data</div>`;
+      } else {
+        sorted.forEach((anchorEntry, entryIdx) => {
+          html += `<div class="mm-entry">`;
+          currentModels.forEach((model, mIdx) => {
+            const rankings = getRankings(mIdx, layer, domain, severity, time, variant);
+            const matched = rankings.find(item => item.variable === anchorEntry.variable);
+            const fallback = [...rankings].sort((a, b) => a.rank - b.rank)[entryIdx];
+            const viewEntry = matched || fallback;
+            const winRate = viewEntry?.win_rate ?? 0;
+            const barColor = `var(${model.color}-bg)`;
+
+            if (mIdx === 0) {
+              const rcls = entryIdx === 0 ? 'r1' : entryIdx === 1 ? 'r2' : entryIdx === 2 ? 'r3' : '';
+              html += `<div class="mm-row">
+                <span class="mm-rank ${rcls}">${entryIdx + 1}</span>
+                <span class="mm-name" title="${anchorEntry.variable}">${displayName(anchorEntry.variable)}</span>
+                <div class="mm-bar-track"><div class="mm-bar-fill" style="width:${Math.min(winRate * 100, 100)}%;background:${barColor}"></div></div>
+                <span class="mm-pct">${viewEntry ? pct(winRate) : '<span class="mm-dash">\u2014</span>'}</span>
+              </div>`;
+            } else {
+              html += `<div class="mm-row">
+                <span class="mm-spacer-rank"></span>
+                <span class="mm-spacer-name"></span>
+                <div class="mm-bar-track"><div class="mm-bar-fill" style="width:${Math.min(winRate * 100, 100)}%;background:${barColor}"></div></div>
+                <span class="mm-pct">${viewEntry ? pct(winRate) : '<span class="mm-dash">\u2014</span>'}</span>
+              </div>`;
+            }
+          });
+          html += `</div>`;
+        });
+      }
+      html += `</td>`;
+    }
+    html += `</tr>`;
+  }
+
+  html += `</tbody></table>`;
+  container.innerHTML = html;
 }
 
 // === Analysis Report =========================================================
 
-// analyzeVariantDivergence removed — main benchmark variants are independent scenarios,
-// not perspective re-narrations. PCS is measured separately (see Section 2 below).
+function analyzeVariantDivergence() {
+  const severity = document.getElementById('rpt-severity')?.value || 'ALL';
+  const time = document.getElementById('rpt-time')?.value || 'ALL';
+  const modelIdx = parseInt(document.getElementById('rpt-model')?.value) || 0;
+  const results = [];
+
+  for (const domain of DOMAINS) {
+    const layerDivs = {};
+    const inversions = [];
+    let maxStd = 0, maxStdVar = null;
+
+    for (const layer of LAYER_KEYS) {
+      const v1 = getRankings(modelIdx, layer, domain, severity, time, '1');
+      const v2 = getRankings(modelIdx, layer, domain, severity, time, '2');
+      const v3 = getRankings(modelIdx, layer, domain, severity, time, '3');
+
+      if (!v1.length && !v2.length && !v3.length) { layerDivs[layer] = 0; continue; }
+
+      const varMap = {};
+      for (const arr of [v1, v2, v3]) {
+        for (const e of arr) {
+          if (!varMap[e.variable]) varMap[e.variable] = { wr: [], rk: [] };
+          varMap[e.variable].wr.push(e.win_rate);
+          varMap[e.variable].rk.push(e.rank);
+        }
+      }
+
+      let sumStd = 0, count = 0;
+      for (const [v, data] of Object.entries(varMap)) {
+        if (data.wr.length < 2) continue;
+        const mean = data.wr.reduce((a,b) => a+b, 0) / data.wr.length;
+        const variance = data.wr.reduce((a,b) => a+(b-mean)**2, 0) / data.wr.length;
+        const std = Math.sqrt(variance);
+        sumStd += std; count++;
+        if (std > maxStd) { maxStd = std; maxStdVar = v; }
+        if (data.rk.length === 3) {
+          const minR = Math.min(...data.rk), maxR = Math.max(...data.rk);
+          if (minR <= 3 && maxR - minR >= 3) {
+            inversions.push({ layer, variable: v, ranks: data.rk, winRates: data.wr });
+          }
+        }
+      }
+      layerDivs[layer] = count > 0 ? sumStd / count : 0;
+    }
+
+    const avgDiv = Object.values(layerDivs).reduce((a,b) => a+b, 0) / LAYER_KEYS.length;
+    results.push({ domain, avgDivergence: avgDiv, layerDivergences: layerDivs, rankInversions: inversions, mostVolatileVar: maxStdVar, mostVolatileStd: maxStd });
+  }
+
+  results.sort((a,b) => b.avgDivergence - a.avgDivergence);
+  return results;
+}
 
 function renderAnalysisReport() {
   const report = document.getElementById('analysis-report');
+  const modelIdx = parseInt(document.getElementById('rpt-model')?.value) || 0;
+  const divergences = analyzeVariantDivergence();
+  if (!divergences.length) { report.innerHTML = ''; return; }
 
-  const totalRecords = ['L2','L3','L4'].reduce((s,l)=>s+(layerData[l]?.meta?.valid_records||0),0);
-  if (!totalRecords) { report.innerHTML = ''; return; }
+  const maxDiv = divergences[0];
+  const minDiv = divergences[divergences.length - 1];
+  const allInversions = divergences.flatMap(d => d.rankInversions.map(inv => ({ ...inv, domain: d.domain })));
+  const maxBarWidth = Math.max(...divergences.map(d => d.avgDivergence), 0.001);
+  const totalRecords = LAYER_KEYS.reduce((s,l) => s + (modelData[modelIdx]?.[l]?.meta?.valid_records || 0), 0);
+  const highDivDomains = divergences.filter(d => d.avgDivergence > divergences.reduce((s,x) => s + x.avgDivergence, 0) / divergences.length);
 
-  // Global #1 per layer
   const globalTop = {};
-  for (const layer of ['L4','L3','L2']) {
-    const r = getRankingsForKey(layer, 'ALL|ALL|ALL|ALL');
-    if (r && r.length) globalTop[layer] = r.sort((a,b)=>a.rank-b.rank)[0];
+  for (const layer of LAYER_KEYS) {
+    const r = getRankings(modelIdx, layer, 'ALL', 'ALL', 'ALL', 'ALL');
+    if (r && r.length) globalTop[layer] = [...r].sort((a,b) => a.rank - b.rank)[0];
   }
+
+  const modelShort = currentModels[modelIdx]?.short || 'Unknown';
 
   let html = `<div class="report-section">
     <h2>PRISM Analysis Report</h2>
-    <p class="report-subtitle">Multi-layer value hierarchy analysis across ${totalRecords.toLocaleString()} forced-choice responses. Rankings show win-rate from pairwise comparisons across 7 domains and 3 authority layers. Each factorial cell includes 3 independently generated scenario variants for measurement robustness.</p>
 
-    <h3>1. Rankings by Domain (Top 5)</h3>
     <div class="report-filters">
+      <div class="rf-group"><label>Model</label>
+        <select id="rpt-model">
+          ${currentModels.map((m, i) => `<option value="${i}">${m.short}</option>`).join('')}
+        </select>
+      </div>
       <div class="rf-group"><label>Severity</label>
         <select id="rpt-severity">
           <option value="ALL">All Severities</option>
-          <optgroup label="Individual scope">
-            <option value="1-1">1-1 Individual / Reversible</option>
-            <option value="1-2">1-2 Individual / Partial</option>
-            <option value="1-3">1-3 Individual / Irreversible</option>
-          </optgroup>
-          <optgroup label="Relational scope">
-            <option value="2-1">2-1 Relational / Reversible</option>
-            <option value="2-2">2-2 Relational / Partial</option>
-            <option value="2-3">2-3 Relational / Irreversible</option>
-          </optgroup>
-          <optgroup label="Group scope">
-            <option value="3-1">3-1 Group / Reversible</option>
-            <option value="3-2">3-2 Group / Partial</option>
-            <option value="3-3">3-3 Group / Irreversible</option>
-          </optgroup>
-          <optgroup label="Societal scope">
-            <option value="4-1">4-1 Societal / Reversible</option>
-            <option value="4-2">4-2 Societal / Partial</option>
-            <option value="4-3">4-3 Societal / Irreversible</option>
-          </optgroup>
-          <optgroup label="Global scope">
-            <option value="5-1">5-1 Global / Reversible</option>
-            <option value="5-2">5-2 Global / Partial</option>
-            <option value="5-3">5-3 Global / Irreversible</option>
-          </optgroup>
+          <optgroup label="Individual"><option value="1-1">1-1 Individual / Reversible</option><option value="1-2">1-2 Individual / Partial</option><option value="1-3">1-3 Individual / Irreversible</option></optgroup>
+          <optgroup label="Relational"><option value="2-1">2-1 Relational / Reversible</option><option value="2-2">2-2 Relational / Partial</option><option value="2-3">2-3 Relational / Irreversible</option></optgroup>
+          <optgroup label="Group"><option value="3-1">3-1 Group / Reversible</option><option value="3-2">3-2 Group / Partial</option><option value="3-3">3-3 Group / Irreversible</option></optgroup>
+          <optgroup label="Societal"><option value="4-1">4-1 Societal / Reversible</option><option value="4-2">4-2 Societal / Partial</option><option value="4-3">4-3 Societal / Irreversible</option></optgroup>
+          <optgroup label="Global"><option value="5-1">5-1 Global / Reversible</option><option value="5-2">5-2 Global / Partial</option><option value="5-3">5-3 Global / Irreversible</option></optgroup>
         </select>
       </div>
       <div class="rf-group"><label>Time Horizon</label>
@@ -414,156 +684,91 @@ function renderAnalysisReport() {
         </select>
       </div>
     </div>
-    <div id="rpt-grid-container"></div>`;
 
-  // Section 2: Perspective Consistency Score (PCS)
-  html += `<h3>2. Perspective Consistency Score (PCS)</h3>
-    <p style="font-size:14px;color:var(--text2);margin-bottom:20px;line-height:1.7;">
-      The main benchmark generates 3 independent scenario variants per factorial cell for measurement robustness. To directly test <strong>framing robustness</strong> — whether value judgments change when the same dilemma is presented from different narrative perspectives — a dedicated PCS measurement was conducted: 648 responses across 216 conditions, each tested from 3 perspectives (external observer, institutional manager, frontline practitioner).
+    <h3>1. Framing Sensitivity Analysis (Cross-Variant Divergence)</h3>
+    <p style="font-size:12px;color:var(--text2);margin-bottom:16px;">
+      Measures how much AI responses (win rates) vary when the same conflict is presented with 3 different framings (V1/V2/V3). Higher divergence = more sensitive to phrasing. Model: <strong>${modelShort}</strong>
     </p>
+    <div class="report-card">`;
 
-    <div class="report-card">
-      <h4 style="color:var(--text)">Overall PCS: <span style="color:var(--green)">0.963</span></h4>
-      <p>216 conditions tested across 3 perspectives each. 88.9% (192/216) showed full agreement across all perspectives; 11.1% (24/216) showed a 2:1 split; 0% showed full disagreement. The model is highly stable under perspective shifts.</p>
-    </div>
-
-    <div class="report-card">
-      <h4 style="color:var(--text)">PCS by Domain</h4>
-      <div class="div-bar-row">
-        <div class="div-bar-label"><div class="domain-id">MED</div><div class="domain-name">Healthcare</div></div>
-        <div class="div-bar-track"><div class="div-bar-fill low" style="width:98.2%"></div></div>
-        <div class="div-bar-value" style="color:var(--green)">0.982</div>
-        <div class="div-bar-badge low">Most stable</div>
-      </div>
-      <div class="div-bar-row">
-        <div class="div-bar-label"><div class="domain-id">LAW</div><div class="domain-name">Criminal Justice</div></div>
-        <div class="div-bar-track"><div class="div-bar-fill mid" style="width:96.3%"></div></div>
-        <div class="div-bar-value" style="color:var(--text2)">0.963</div>
-        <div class="div-bar-badge"></div>
-      </div>
-      <div class="div-bar-row">
-        <div class="div-bar-label"><div class="domain-id">DEF</div><div class="domain-name">Defense</div></div>
-        <div class="div-bar-track"><div class="div-bar-fill mid" style="width:95.7%"></div></div>
-        <div class="div-bar-value" style="color:var(--text2)">0.957</div>
-        <div class="div-bar-badge"></div>
-      </div>
-      <div class="div-bar-row">
-        <div class="div-bar-label"><div class="domain-id">BIZ</div><div class="domain-name">Business</div></div>
-        <div class="div-bar-track"><div class="div-bar-fill high" style="width:95.1%"></div></div>
-        <div class="div-bar-value" style="color:var(--red)">0.951</div>
-        <div class="div-bar-badge high">Least stable</div>
-      </div>
-    </div>
-
-    <div class="report-card amber">
-      <h4>Perspective Bias Signals</h4>
-      <p style="margin-bottom:10px;">Win-rate shifts when the same dilemma is presented from different narrative perspectives. Largest deviations from the overall average:</p>
-      <ul>
-        <li><strong>Self-Direction-Action</strong> — most perspective-sensitive value:
-          <br>v1 External observer: 0.625 · v2 Institutional manager: <span style="color:var(--red)">0.458 (−0.125)</span> · v3 Frontline practitioner: <span style="color:var(--green)">0.667 (+0.083)</span>
-          <br><em>Institutional framing suppresses action-autonomy; practitioner framing amplifies it.</em></li>
-        <li><strong>Security-Personal</strong> — practitioner perspective eliminates this value:
-          <br>v2 Institutional manager: 0.125 · v3 Frontline practitioner: <span style="color:var(--red)">0.000 (−0.069)</span>
-          <br><em>Practitioners completely deprioritize personal security framing.</em></li>
-      </ul>
-    </div>
-
-    <div class="report-card">
-      <h4 style="color:var(--text)">Most Unstable Conditions</h4>
-      <p style="margin-bottom:10px;">8 of 10 lowest-PCS conditions (PCS = 0.67) occur in BIZ domain, concentrated in two intra-value-family pairs:</p>
-      <ul>
-        <li><strong>Security-Personal vs. Security-Societal</strong> — intra-conservation conflict. The institutional manager (v2) perspective frequently diverges from the other two.</li>
-        <li><strong>Self-Direction-Thought vs. Self-Direction-Action</strong> — intra-autonomy conflict. These sub-value distinctions from Schwartz's 19-value refinement are conceptually valid but empirically fragile under perspective shifts.</li>
-      </ul>
+  divergences.forEach(d => {
+    const barPct = maxBarWidth > 0 ? (d.avgDivergence / maxBarWidth) * 100 : 0;
+    const isHigh = d === maxDiv, isLow = d === minDiv;
+    const cls = isHigh ? 'high' : isLow ? 'low' : 'mid';
+    html += `<div class="div-bar-row">
+      <div class="div-bar-label"><div class="domain-id">${d.domain}</div><div class="domain-name">${DOMAIN_NAMES[d.domain]||d.domain}</div></div>
+      <div class="div-bar-track"><div class="div-bar-fill ${cls}" style="width:${Math.max(barPct,2)}%"></div></div>
+      <div class="div-bar-value" style="color:var(--${isHigh?'red':isLow?'green':'text2'})">${(d.avgDivergence*100).toFixed(2)}%p</div>
+      <div class="div-bar-badge ${cls}">${isHigh?'Highest':isLow?'Lowest':''}</div>
     </div>`;
+  });
+  html += `</div>`;
 
-  // Section 3: Implications
-  html += `<h3>3. Implications</h3>
+  if (allInversions.length > 0) {
+    html += `<div class="report-card amber">
+      <h4>Rank Inversions Detected (${allInversions.length} cases)</h4>
+      <p style="margin-bottom:10px;">Cases where a top-3 variable drops 3+ ranks in another framing.</p>`;
+    allInversions.slice(0, 10).forEach(inv => {
+      html += `<div class="inv-row"><span class="inv-domain">${inv.domain}</span><span class="inv-layer">${inv.layer}</span><span class="inv-var">${displayName(inv.variable)}</span><span class="inv-ranks">Rank: ${inv.ranks.join(' / ')}</span></div>`;
+    });
+    if (allInversions.length > 10) html += `<p style="font-size:11px;color:var(--text3);margin-top:6px;">+${allInversions.length-10} more</p>`;
+    html += `</div>`;
+  }
+
+  const volatiles = divergences.filter(d => d.mostVolatileVar);
+  if (volatiles.length) {
+    html += `<div class="report-card"><h4 style="color:var(--text)">Most Volatile Variable per Domain</h4><div class="vol-grid">`;
+    volatiles.forEach(d => {
+      html += `<div class="vol-item"><span class="vol-domain">${d.domain}:</span> ${displayName(d.mostVolatileVar)} <span class="vol-std">(+/-${(d.mostVolatileStd*100).toFixed(1)}%p)</span></div>`;
+    });
+    html += `</div></div>`;
+  }
+
+  html += `<h3>2. Implications &amp; Issues</h3>
+    <div class="report-card red">
+      <h4>Core Issue: Value Judgment Instability from Framing Effects</h4>
+      <p>When the same value conflict is rephrased differently, the ${maxDiv.domain} (${DOMAIN_NAMES[maxDiv.domain]}) domain shows an average ${(maxDiv.avgDivergence*100).toFixed(2)}%p win-rate divergence for <strong>${modelShort}</strong>.</p>
+      ${allInversions.length > 0 ? `<p style="margin-top:8px;">${allInversions.length} rank inversions were detected — cases where simply reframing the question causes the AI to prioritize entirely different values.</p>` : ''}
+    </div>
+
     <div class="report-card blue">
-      <h4>Key Findings</h4>
+      <h4>Domain-Specific Findings</h4>
       <ul>
-        <li><strong>High overall stability.</strong> PCS of 0.963 indicates that value judgments are largely robust to perspective shifts — the model maintains consistent priorities regardless of whether a dilemma is presented from an observer, manager, or practitioner viewpoint.</li>
-        <li><strong>Domain sensitivity.</strong> MED (Healthcare) is the most perspective-stable domain (0.982), while BIZ (Business) is the least stable (0.951) — business dilemmas are most sensitive to whose perspective the scenario adopts.</li>
-        ${globalTop.L4 ? '<li><strong>Top-value stability.</strong> "' + displayName(globalTop.L4.variable) + '" ranks #1 overall in L4 (' + pct(globalTop.L4.win_rate) + '). The PCS measurement confirms that top-tier value rankings are robust, while instability concentrates in intra-value-family pairs (e.g., Security-Personal vs. Security-Societal).</li>' : ''}
+        <li>Most sensitive domains: <strong>${highDivDomains.map(d=>`${d.domain} (${DOMAIN_NAMES[d.domain]})`).join(', ')}</strong></li>
+        <li>Most stable domain: <strong>${minDiv.domain} (${DOMAIN_NAMES[minDiv.domain]})</strong> — at ${(minDiv.avgDivergence*100).toFixed(2)}%p divergence</li>
+        ${globalTop.L4 ? `<li>"${displayName(globalTop.L4.variable)}" ranks #1 overall in L4 (${pct(globalTop.L4.win_rate)})</li>` : ''}
       </ul>
     </div>
 
     <div class="report-card">
-      <h4 style="color:var(--text)">Measurement Design Note</h4>
+      <h4 style="color:var(--text)">Structural Implications</h4>
       <ul>
-        <li>The 3 scenario variants in the main benchmark are <strong>independently generated scenarios</strong> — not re-narrations of the same event. They provide measurement robustness through replication, not perspective comparison.</li>
-        <li>PCS was measured in a <strong>dedicated separate experiment</strong> (648 responses, 216 conditions × 3 perspectives) specifically designed to test framing robustness by presenting the same dilemma from 3 narrative viewpoints.</li>
-        <li>The distinction matters: high cross-variant consistency in the main benchmark indicates <strong>scenario replication stability</strong>; high PCS indicates <strong>perspective framing robustness</strong>. Both are necessary for reliable value measurement.</li>
+        <li>Framing effects are a classic human cognitive bias — their presence in AI suggests the model has learned and reproduces human biases.</li>
+        <li>Multi-framing cross-validation (the PRISM approach) reveals instabilities that single-prompt evaluation misses.</li>
+        <li>In high-stakes domains (medical/defense/legal), AI decisions must be validated for consistency across multiple framings.</li>
+        ${totalRecords > 0 ? `<li>${totalRecords.toLocaleString()} forced-choice responses x 3-framing cross-analysis enables 3x reliability validation.</li>` : ''}
       </ul>
     </div>
   </div>`;
 
   report.innerHTML = html;
 
-  // Render the grid table with current report dropdown values
-  renderReportGrid();
-
-  // Bind report-specific dropdowns (update grid on filter change)
-  ['rpt-severity','rpt-time'].forEach(id => {
+  ['rpt-model','rpt-severity','rpt-time'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.addEventListener('change', () => {
       const saved = {};
-      ['rpt-severity','rpt-time'].forEach(sid => { const sel = document.getElementById(sid); if (sel) saved[sid] = sel.value; });
+      ['rpt-model','rpt-severity','rpt-time'].forEach(sid => { const sel = document.getElementById(sid); if (sel) saved[sid] = sel.value; });
       renderAnalysisReport();
       Object.entries(saved).forEach(([sid, val]) => { const sel = document.getElementById(sid); if (sel) sel.value = val; });
-      renderReportGrid();
     });
   });
 }
 
-function renderReportGrid() {
-  const container = document.getElementById('rpt-grid-container');
-  if (!container) return;
-
-  const severity = document.getElementById('rpt-severity')?.value || 'ALL';
-  const time = document.getElementById('rpt-time')?.value || 'ALL';
-  const variant = 'ALL';
-  const layers = ['L4','L3','L2'];
-
-  let html = `<table class="domain-grid-table"><thead><tr>
-    <th>Domain</th>
-    <th>L4 — Values</th>
-    <th>L3 — Epistemic</th>
-    <th>L2 — Source</th>
-  </tr></thead><tbody>`;
-
-  for (const domain of DOMAINS) {
-    const domKey = buildKeyWith(domain, severity, time, variant);
-    html += `<tr><td><div class="dg-domain">${domain}</div><div class="dg-domain-sub">${DOMAIN_NAMES[domain]||domain}</div></td>`;
-    for (const layer of layers) {
-      const r = getRankingsForKey(layer, domKey);
-      html += `<td class="dg-cell">`;
-      if (r && r.length) {
-        const sorted = [...r].sort((a,b)=>a.rank-b.rank).slice(0,5);
-        sorted.forEach((entry, i) => {
-          const tc = getVarTextColor(entry.variable);
-          const bg = getVarBarGradient(entry.variable);
-          const barW = (entry.win_rate*100).toFixed(2);
-          const rcls = i===0?'r1':i===1?'r2':i===2?'r3':'';
-          html += `<div class="dg-rank">
-            <div class="dg-rank-num ${rcls}">${i+1}</div>
-            <div class="dg-rank-name" style="color:${tc}" title="${entry.variable}">${displayName(entry.variable)}</div>
-            <div class="dg-rank-pct" style="color:${tc}">${pct(entry.win_rate)}</div>
-          </div>
-          <div class="dg-bar"><div class="dg-bar-fill" style="width:${barW}%;background:${bg}"></div></div>`;
-        });
-      } else {
-        html += `<div class="dg-empty">No data</div>`;
-      }
-      html += `</td>`;
-    }
-    html += `</tr>`;
-  }
-  html += `</tbody></table>`;
-  container.innerHTML = html;
-}
-
 // === Events ==================================================================
+
+['sel-domain','sel-severity','sel-time','sel-topn'].forEach(id => {
+  document.getElementById(id)?.addEventListener('change', renderGrid);
+});
 
 // === Theme ===================================================================
 
@@ -574,16 +779,9 @@ function getPreferredTheme() {
 }
 function applyTheme(theme) {
   document.documentElement.setAttribute('data-theme', theme);
-  document.getElementById('theme-icon').textContent = theme === 'dark' ? '☀️' : '🌙';
+  document.getElementById('theme-icon').textContent = theme === 'dark' ? '\u2600\uFE0F' : '\uD83C\uDF19';
   document.getElementById('theme-label').textContent = theme === 'dark' ? 'Light' : 'Dark';
   localStorage.setItem('aio-prism-theme', theme);
-  if (loadedCount === 3) {
-    const saved = {};
-    ['rpt-severity','rpt-time'].forEach(id => { const el = document.getElementById(id); if (el) saved[id] = el.value; });
-    renderAnalysisReport();
-    Object.entries(saved).forEach(([id, val]) => { const el = document.getElementById(id); if (el) { el.value = val; } });
-    renderReportGrid();
-  }
 }
 document.getElementById('theme-toggle').addEventListener('click', () => {
   const current = document.documentElement.getAttribute('data-theme') || 'dark';
@@ -592,7 +790,7 @@ document.getElementById('theme-toggle').addEventListener('click', () => {
 applyTheme(getPreferredTheme());
 
 // === Boot ====================================================================
-loadAllData();
+boot();
 </script>
 </body>
 </html>
