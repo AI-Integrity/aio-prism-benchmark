@@ -114,9 +114,26 @@
       font-size: 12px;
     }
     .legend-title { font-weight: 700; color: var(--text2); margin-right: 4px; }
-    .legend-item { display: inline-flex; align-items: center; gap: 6px; }
+    .legend-item {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 6px 10px; border: 1px solid var(--border); border-radius: 999px;
+      background: var(--surface2); cursor: pointer; user-select: none;
+    }
+    .legend-item input { margin: 0; accent-color: var(--accent); cursor: pointer; }
+    .legend-item.is-off { opacity: 0.55; }
     .legend-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
     .legend-model { color: var(--text); font-weight: 500; }
+
+    .mm-model-block {
+      padding: 8px 0 10px;
+      border-bottom: 1px dashed var(--border);
+    }
+    .mm-model-block:last-child { padding-bottom: 0; border-bottom: none; }
+    .mm-model-head {
+      display: flex; align-items: center; gap: 8px;
+      margin-bottom: 6px; font-size: 11px; font-weight: 700; color: var(--text2);
+    }
+    .mm-model-head .legend-dot { width: 8px; height: 8px; }
 
     /* Section title */
     .section-title { font-size: 13px; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 12px; }
@@ -281,6 +298,13 @@
           <option value="15">Top 15</option>
         </select>
       </div>
+      <div class="filter-group">
+        <label>View Mode</label>
+        <select id="sel-viewmode">
+          <option value="aligned" selected>Aligned</option>
+          <option value="per-model">By Model</option>
+        </select>
+      </div>
     </div>
 
     <!-- Legend -->
@@ -335,6 +359,7 @@ let runsManifest = null;   // parsed runs.json
 let currentModels = [];    // models for current date: [{id, short, color}]
 let modelData = [];        // modelData[modelIdx][layer] = parsed JSON
 let currentRun = null;     // selected run metadata
+let selectedModelIds = new Set();
 
 // === Load Manifest ===========================================================
 
@@ -392,6 +417,7 @@ async function loadDateData(dateKey) {
     path: m.path ?? m.id,
     color: MODEL_COLORS[i % MODEL_COLORS.length],
   }));
+  selectedModelIds = new Set(currentModels.map(model => model.id));
 
   modelData = currentModels.map(() => ({}));
 
@@ -457,21 +483,116 @@ function renderRunTitle() {
 
   const label = currentRun.label || dateLabel(currentRun.date);
   const modelCount = currentModels.length;
+  const selectedCount = currentModels.filter(model => selectedModelIds.has(model.id)).length;
   const runType = modelCount === 1 ? 'Single-model run' : 'Multi-model comparison';
 
-  title.innerHTML = `${runType} <span class="date-badge">${label} <span class="model-count">${modelCount} model${modelCount === 1 ? '' : 's'}</span></span>`;
+  title.innerHTML = `${runType} <span class="date-badge">${label} <span class="model-count">${selectedCount}/${modelCount} selected</span></span>`;
 }
 
 function renderLegend() {
   const bar = document.getElementById('legend-bar');
-  let html = '<span class="legend-title">Legend</span>';
+  let html = '<span class="legend-title">Models</span>';
   currentModels.forEach(model => {
-    html += `<span class="legend-item">
+    const isChecked = selectedModelIds.has(model.id);
+    html += `<label class="legend-item${isChecked ? '' : ' is-off'}">
+      <input type="checkbox" data-model-id="${model.id}" ${isChecked ? 'checked' : ''}>
       <span class="legend-dot" style="background:var(${model.color})"></span>
       <span class="legend-model">${model.short}</span>
-    </span>`;
+    </label>`;
   });
   bar.innerHTML = html;
+}
+
+function getVisibleModels() {
+  return currentModels
+    .map((model, index) => ({ model, index }))
+    .filter(({ model }) => selectedModelIds.has(model.id));
+}
+
+function renderAlignedCell(layer, domain, severity, time, variant, topN, visibleModels) {
+  let anchorIdx = visibleModels[0]?.index ?? 0;
+  let anchorLen = 0;
+
+  visibleModels.forEach(({ index }) => {
+    const rankings = getRankings(index, layer, domain, severity, time, variant);
+    if (rankings.length > anchorLen) {
+      anchorLen = rankings.length;
+      anchorIdx = index;
+    }
+  });
+
+  const anchorRankings = getRankings(anchorIdx, layer, domain, severity, time, variant);
+  const sorted = [...anchorRankings].sort((a, b) => a.rank - b.rank).slice(0, topN);
+  const hasAnyData = visibleModels.some(({ index }) => getRankings(index, layer, domain, severity, time, variant).length > 0);
+
+  if (!hasAnyData) return '<div class="dg-empty">No data</div>';
+
+  let html = '';
+  sorted.forEach((anchorEntry, entryIdx) => {
+    html += `<div class="mm-entry">`;
+    visibleModels.forEach(({ model, index }, visibleIdx) => {
+      const rankings = getRankings(index, layer, domain, severity, time, variant);
+      const matched = rankings.find(item => item.variable === anchorEntry.variable);
+      const fallback = [...rankings].sort((a, b) => a.rank - b.rank)[entryIdx];
+      const viewEntry = matched || fallback;
+      const winRate = viewEntry?.win_rate ?? 0;
+      const barColor = `var(${model.color}-bg)`;
+
+      if (visibleIdx === 0) {
+        const rcls = entryIdx === 0 ? 'r1' : entryIdx === 1 ? 'r2' : entryIdx === 2 ? 'r3' : '';
+        html += `<div class="mm-row">
+          <span class="mm-rank ${rcls}">${entryIdx + 1}</span>
+          <span class="mm-name" title="${anchorEntry.variable}">${displayName(anchorEntry.variable)}</span>
+          <div class="mm-bar-track"><div class="mm-bar-fill" style="width:${Math.min(winRate * 100, 100)}%;background:${barColor}"></div></div>
+          <span class="mm-pct">${viewEntry ? pct(winRate) : '<span class="mm-dash">\u2014</span>'}</span>
+        </div>`;
+      } else {
+        html += `<div class="mm-row">
+          <span class="mm-spacer-rank"></span>
+          <span class="mm-spacer-name"></span>
+          <div class="mm-bar-track"><div class="mm-bar-fill" style="width:${Math.min(winRate * 100, 100)}%;background:${barColor}"></div></div>
+          <span class="mm-pct">${viewEntry ? pct(winRate) : '<span class="mm-dash">\u2014</span>'}</span>
+        </div>`;
+      }
+    });
+    html += `</div>`;
+  });
+
+  return html;
+}
+
+function renderPerModelCell(layer, domain, severity, time, variant, topN, visibleModels) {
+  const hasAnyData = visibleModels.some(({ index }) => getRankings(index, layer, domain, severity, time, variant).length > 0);
+  if (!hasAnyData) return '<div class="dg-empty">No data</div>';
+
+  let html = '';
+  visibleModels.forEach(({ model, index }) => {
+    const rankings = [...getRankings(index, layer, domain, severity, time, variant)]
+      .sort((a, b) => a.rank - b.rank)
+      .slice(0, topN);
+
+    if (!rankings.length) return;
+
+    html += `<div class="mm-model-block">
+      <div class="mm-model-head">
+        <span class="legend-dot" style="background:var(${model.color})"></span>
+        <span>${model.short}</span>
+      </div>`;
+
+    rankings.forEach((entry, entryIdx) => {
+      const rcls = entryIdx === 0 ? 'r1' : entryIdx === 1 ? 'r2' : entryIdx === 2 ? 'r3' : '';
+      html += `<div class="mm-row">
+        <span class="mm-rank ${rcls}">${entry.rank}</span>
+        <span class="mm-name" title="${entry.variable}">${displayName(entry.variable)}</span>
+        <div class="mm-bar-track"><div class="mm-bar-fill" style="width:${Math.min(entry.win_rate * 100, 100)}%;background:var(${model.color}-bg)"></div></div>
+        <span class="mm-pct">${pct(entry.win_rate)}</span>
+      </div>`;
+    });
+
+    html += `</div>`;
+  });
+
+  return html || '<div class="dg-empty">No data</div>';
 }
 
 // === Multi-Model Grid ========================================================
@@ -482,7 +603,14 @@ function renderGrid() {
   const severity = document.getElementById('sel-severity').value;
   const time = document.getElementById('sel-time').value;
   const topN = parseInt(document.getElementById('sel-topn').value) || 10;
+  const viewMode = document.getElementById('sel-viewmode').value;
   const variant = 'ALL';
+  const visibleModels = getVisibleModels();
+
+  if (visibleModels.length === 0) {
+    container.innerHTML = '<div class="state-msg"><p>Select at least one model to display results.</p></div>';
+    return;
+  }
 
   const visibleDomains = domainFilter === 'ALL' ? DOMAINS : DOMAINS.filter(d => d === domainFilter);
 
@@ -495,51 +623,10 @@ function renderGrid() {
     html += `<tr><td><div class="dg-domain">${domain}</div><div class="dg-domain-sub">${DOMAIN_NAMES[domain] || domain}</div></td>`;
 
     for (const layer of LAYER_KEYS) {
-      let anchorIdx = 0, anchorLen = 0;
-      currentModels.forEach((_, mIdx) => {
-        const r = getRankings(mIdx, layer, domain, severity, time, variant);
-        if (r.length > anchorLen) { anchorLen = r.length; anchorIdx = mIdx; }
-      });
-
-      const anchorRankings = getRankings(anchorIdx, layer, domain, severity, time, variant);
-      const sorted = [...anchorRankings].sort((a, b) => a.rank - b.rank).slice(0, topN);
-      const hasAnyData = currentModels.some((_, mIdx) => getRankings(mIdx, layer, domain, severity, time, variant).length > 0);
-
       html += `<td class="dg-cell">`;
-
-      if (!hasAnyData) {
-        html += `<div class="dg-empty">No data</div>`;
-      } else {
-        sorted.forEach((anchorEntry, entryIdx) => {
-          html += `<div class="mm-entry">`;
-          currentModels.forEach((model, mIdx) => {
-            const rankings = getRankings(mIdx, layer, domain, severity, time, variant);
-            const matched = rankings.find(item => item.variable === anchorEntry.variable);
-            const fallback = [...rankings].sort((a, b) => a.rank - b.rank)[entryIdx];
-            const viewEntry = matched || fallback;
-            const winRate = viewEntry?.win_rate ?? 0;
-            const barColor = `var(${model.color}-bg)`;
-
-            if (mIdx === 0) {
-              const rcls = entryIdx === 0 ? 'r1' : entryIdx === 1 ? 'r2' : entryIdx === 2 ? 'r3' : '';
-              html += `<div class="mm-row">
-                <span class="mm-rank ${rcls}">${entryIdx + 1}</span>
-                <span class="mm-name" title="${anchorEntry.variable}">${displayName(anchorEntry.variable)}</span>
-                <div class="mm-bar-track"><div class="mm-bar-fill" style="width:${Math.min(winRate * 100, 100)}%;background:${barColor}"></div></div>
-                <span class="mm-pct">${viewEntry ? pct(winRate) : '<span class="mm-dash">\u2014</span>'}</span>
-              </div>`;
-            } else {
-              html += `<div class="mm-row">
-                <span class="mm-spacer-rank"></span>
-                <span class="mm-spacer-name"></span>
-                <div class="mm-bar-track"><div class="mm-bar-fill" style="width:${Math.min(winRate * 100, 100)}%;background:${barColor}"></div></div>
-                <span class="mm-pct">${viewEntry ? pct(winRate) : '<span class="mm-dash">\u2014</span>'}</span>
-              </div>`;
-            }
-          });
-          html += `</div>`;
-        });
-      }
+      html += viewMode === 'per-model'
+        ? renderPerModelCell(layer, domain, severity, time, variant, topN, visibleModels)
+        : renderAlignedCell(layer, domain, severity, time, variant, topN, visibleModels);
       html += `</td>`;
     }
     html += `</tr>`;
@@ -551,8 +638,20 @@ function renderGrid() {
 
 // === Events ==================================================================
 
-['sel-domain','sel-severity','sel-time','sel-topn'].forEach(id => {
+['sel-domain','sel-severity','sel-time','sel-topn','sel-viewmode'].forEach(id => {
   document.getElementById(id)?.addEventListener('change', renderGrid);
+});
+
+document.getElementById('legend-bar')?.addEventListener('change', event => {
+  const input = event.target;
+  if (!(input instanceof HTMLInputElement) || input.type !== 'checkbox') return;
+
+  if (input.checked) selectedModelIds.add(input.dataset.modelId);
+  else selectedModelIds.delete(input.dataset.modelId);
+
+  renderRunTitle();
+  renderLegend();
+  renderGrid();
 });
 
 // === Theme ===================================================================
