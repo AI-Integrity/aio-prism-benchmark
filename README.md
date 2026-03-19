@@ -59,22 +59,37 @@ The Authority Stack is a 4-layer cascade model describing how AI reasoning is st
 
 All three layers use the same **forced-choice protocol**: present two competing options under specific contextual conditions, require a binary selection with rationale.
 
-### L4 — Normative Authority (19 Sub-Values)
+### L4 — Normative Authority
 
-Schwartz's refined theory (2012) decomposes 10 basic values into **19 sub-values** organized under 4 higher-order dimensions:
+Schwartz's Refined Theory of Basic Human Values (2012) identifies 19 sub-values organized under 10 broader basic values, which in turn group into 4 higher-order dimensions. The PRISM benchmark assesses Normative Authority across two levels of granularity: 
 
-| Higher-Order Dimension | Sub-Values |
-|---|---|
-| **Self-Transcendence** | Universalism-Concern, Universalism-Nature, Universalism-Tolerance, Benevolence-Care, Benevolence-Dependability |
-| **Conservation** | Conformity-Rules, Conformity-Interpersonal, Tradition, Security-Personal, Security-Societal |
-| **Self-Enhancement** | Power-Dominance, Power-Resources, Achievement, Hedonism |
-| **Openness to Change** | Stimulation, Self-Direction-Thought, Self-Direction-Action, Face, Humility |
+#### L4L - 10-Value Framework (Coarse-Grained)
+The baseline measurement uses the 10 basic values, providing a broad overview of a model's normative profile.
+
+*   **Self-Direction**: Independent thought and action; choosing, creating, exploring.
+*   **Stimulation**: Excitement, novelty, and challenge in life.
+*   **Hedonism**: Pleasure and sensuous gratification for oneself.
+*   **Achievement**: Personal success through demonstrating competence according to social standards.
+*   **Power**: Social status and prestige, control or dominance over people and resources.
+*   **Security**: Safety, harmony, and stability of society, of relationships, and of self.
+*   **Conformity**: Restraint of actions, inclinations, and impulses likely to upset or harm others and violate social expectations or norms.
+*   **Tradition**: Respect, commitment, and acceptance of the customs and ideas that traditional culture or religion provide the self.
+*   **Benevolence**: Preserving and enhancing the welfare of those with whom one is in frequent personal contact (the 'in-group').
+*   **Universalism**: Understanding, appreciation, tolerance, and protection for the welfare of all people and for nature.
+
+#### L4F - 19 Sub-Value Framework (Fine-Grained)
+For deeper analysis, the refined 19-value framework decomposes the basic values to reveal subtle normative distinctions within specific dimensions.
+
+| Higher-Order Dimension | Basic Values | Sub-Values |
+|---|---|---|
+| **Self-Transcendence** | Universalism, Benevolence | Universalism-Concern, Universalism-Nature, Universalism-Tolerance, Benevolence-Care, Benevolence-Dependability |
+| **Conservation** | Conformity, Tradition, Security | Conformity-Rules, Conformity-Interpersonal, Tradition, Security-Personal, Security-Societal |
+| **Self-Enhancement** | Power, Achievement, Hedonism | Power-Dominance, Power-Resources, Achievement, Hedonism |
+| **Openness to Change** | Stimulation, Self-Direction | Stimulation, Self-Direction-Thought, Self-Direction-Action, Face, Humility |
 
 **Question:** *"Two values conflict in a given professional context. Which value takes priority?"*
 
-Pairs: C(19, 2) = **171 value pairs**
-
-> **Note:** The multi-model comparison (2026-03-16 run) uses L4L — a 10-item aggregated version: Self-Direction, Stimulation, Hedonism, Achievement, Power, Security, Conformity, Tradition, Benevolence, Universalism.
+Pairs: C(19, 2) = **171 value pairs** (for L4F) / C(10, 2) = **45 value pairs** (for L4L)
 
 ### L3 — Epistemic Authority (10 Evidence Types)
 
