@@ -94,8 +94,15 @@
       background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%238b90a8'/%3E%3C/svg%3E");
       background-repeat: no-repeat; background-position: right 8px center; transition: border-color 0.15s;
     }
+    .filter-group select:disabled { opacity: 0.55; cursor: not-allowed; }
     .filter-group select:focus { outline: none; border-color: var(--accent); }
+    .filter-group.is-disabled label { opacity: 0.7; }
     .filter-separator { width: 1px; height: 24px; background: var(--border); margin: 0 4px; }
+    .filter-check {
+      display: inline-flex; align-items: center; gap: 8px;
+      font-size: 12px; color: var(--text2); user-select: none;
+    }
+    .filter-check input { margin: 0; accent-color: var(--accent); }
 
     /* Date badge */
     .date-badge {
@@ -141,7 +148,7 @@
     /* Domain x Layer Grid Table */
     .domain-grid-table { width: 100%; border-collapse: separate; border-spacing: 0; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
     .domain-grid-table th { background: var(--surface2); font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; color: var(--text2); padding: 12px 14px; border-bottom: 1px solid var(--border); text-align: center; }
-    .domain-grid-table th:first-child { text-align: left; width: 100px; }
+    .domain-grid-table th:first-child { text-align: left; width: 140px; }
     .domain-grid-table td { padding: 10px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
     .domain-grid-table tr:last-child td { border-bottom: none; }
     .domain-grid-table tr:hover td { background: var(--surface2); }
@@ -237,6 +244,31 @@
       </div>
       <div class="filter-separator"></div>
       <div class="filter-group">
+        <label>Rows</label>
+        <select id="sel-row-axis">
+          <option value="domain" selected>Domain</option>
+          <option value="layer">Layer</option>
+          <option value="severity">Severity</option>
+          <option value="time">Time Horizon</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label>Columns</label>
+        <select id="sel-col-axis">
+          <option value="domain">Domain</option>
+          <option value="layer" selected>Layer</option>
+          <option value="severity">Severity</option>
+          <option value="time">Time Horizon</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label class="filter-check">
+          <input type="checkbox" id="chk-axis-aggregate">
+          <span>Include Aggregate</span>
+        </label>
+      </div>
+      <div class="filter-separator"></div>
+      <div class="filter-group" data-filter-dim="domain">
         <label>Domain</label>
         <select id="sel-domain">
           <option value="ALL">All Domains</option>
@@ -249,7 +281,15 @@
           <option value="CARE">CARE - Care</option>
         </select>
       </div>
-      <div class="filter-group">
+      <div class="filter-group" data-filter-dim="layer">
+        <label>Layer</label>
+        <select id="sel-layer">
+          <option value="L4" selected>L4 - Values</option>
+          <option value="L3">L3 - Epistemic</option>
+          <option value="L2">L2 - Source</option>
+        </select>
+      </div>
+      <div class="filter-group" data-filter-dim="severity">
         <label>Severity</label>
         <select id="sel-severity">
           <option value="ALL">All Severities</option>
@@ -280,14 +320,14 @@
           </optgroup>
         </select>
       </div>
-      <div class="filter-group">
+      <div class="filter-group" data-filter-dim="time">
         <label>Time Horizon</label>
         <select id="sel-time">
           <option value="ALL">All Time Horizons</option>
-            <option value="1">Immediate</option>
-            <option value="2">Short-term</option>
-            <option value="3">Long-term</option>
-            <option value="4">Permanent / Generational</option>
+          <option value="1">Immediate</option>
+          <option value="2">Short-term</option>
+          <option value="3">Long-term</option>
+          <option value="4">Permanent / Generational</option>
         </select>
       </div>
       <div class="filter-group">
@@ -346,12 +386,125 @@ const LAYER_INFO = {
 
 const DOMAINS = ['MED','BIZ','TECH','EDU','LAW','DEF','CARE'];
 const DOMAIN_NAMES = { MED:'Medical', BIZ:'Business', TECH:'Technology', EDU:'Education', LAW:'Legal', DEF:'Defense', CARE:'Care' };
+const SEVERITY_OPTIONS = [
+  { key: '1-1', label: '1-1', sublabel: 'Individual / Reversible' },
+  { key: '1-2', label: '1-2', sublabel: 'Individual / Partial' },
+  { key: '1-3', label: '1-3', sublabel: 'Individual / Irreversible' },
+  { key: '2-1', label: '2-1', sublabel: 'Relational / Reversible' },
+  { key: '2-2', label: '2-2', sublabel: 'Relational / Partial' },
+  { key: '2-3', label: '2-3', sublabel: 'Relational / Irreversible' },
+  { key: '3-1', label: '3-1', sublabel: 'Group / Reversible' },
+  { key: '3-2', label: '3-2', sublabel: 'Group / Partial' },
+  { key: '3-3', label: '3-3', sublabel: 'Group / Irreversible' },
+  { key: '4-1', label: '4-1', sublabel: 'Societal / Reversible' },
+  { key: '4-2', label: '4-2', sublabel: 'Societal / Partial' },
+  { key: '4-3', label: '4-3', sublabel: 'Societal / Irreversible' },
+  { key: '5-1', label: '5-1', sublabel: 'Global / Reversible' },
+  { key: '5-2', label: '5-2', sublabel: 'Global / Partial' },
+  { key: '5-3', label: '5-3', sublabel: 'Global / Irreversible' },
+];
+const TIME_OPTIONS = [
+  { key: '1', label: 'Immediate', sublabel: '24 hours' },
+  { key: '2', label: 'Short-term', sublabel: '1 year' },
+  { key: '3', label: 'Long-term', sublabel: '10+ years' },
+  { key: '4', label: 'Permanent / Generational', sublabel: 'Generational horizon' },
+];
+const AXIS_OPTIONS = ['domain', 'layer', 'severity', 'time'];
+const AXIS_META = {
+  domain: {
+    title: 'Domain',
+    filterId: 'sel-domain',
+    allowsAggregate: true,
+    aggregateEntry: { key: 'ALL', label: 'ALL', sublabel: 'Average across domains' },
+    getEntries: () => DOMAINS.map(key => ({ key, label: key, sublabel: DOMAIN_NAMES[key] || key })),
+  },
+  layer: {
+    title: 'Layer',
+    filterId: 'sel-layer',
+    allowsAggregate: false,
+    getEntries: () => LAYER_KEYS.map(key => ({ key, label: LAYER_INFO[key].title, sublabel: LAYER_INFO[key].desc })),
+  },
+  severity: {
+    title: 'Severity',
+    filterId: 'sel-severity',
+    allowsAggregate: true,
+    aggregateEntry: { key: 'ALL', label: 'ALL', sublabel: 'Average across severities' },
+    getEntries: () => SEVERITY_OPTIONS,
+  },
+  time: {
+    title: 'Time Horizon',
+    filterId: 'sel-time',
+    allowsAggregate: true,
+    aggregateEntry: { key: 'ALL', label: 'ALL', sublabel: 'Average across time horizons' },
+    getEntries: () => TIME_OPTIONS,
+  },
+};
 
 function displayName(v) {
   return v.replace(/^[SE]\d+-/,'').replace(/-/g,' ').replace(/\b\w/g, c => c.toUpperCase());
 }
 function pct(n) { return (n * 100).toFixed(1) + '%'; }
 function dateLabel(d) { return d.length === 8 ? `${d.slice(0,4)}-${d.slice(4,6)}-${d.slice(6,8)}` : d; }
+function titleCaseAxis(key) { return AXIS_META[key]?.title || key; }
+function getAxisSelections() {
+  return {
+    row: document.getElementById('sel-row-axis').value,
+    col: document.getElementById('sel-col-axis').value,
+  };
+}
+function getFilterValues() {
+  return {
+    domain: document.getElementById('sel-domain').value,
+    layer: document.getElementById('sel-layer').value,
+    severity: document.getElementById('sel-severity').value,
+    time: document.getElementById('sel-time').value,
+  };
+}
+function includeAxisAggregate() {
+  return document.getElementById('chk-axis-aggregate').checked;
+}
+function getAxisEntries(axisKey) {
+  const meta = AXIS_META[axisKey];
+  const base = meta.getEntries();
+  if (!meta.allowsAggregate || !includeAxisAggregate()) return base;
+  return [meta.aggregateEntry, ...base];
+}
+function updateAxisSelectors(changedId) {
+  const rowSel = document.getElementById('sel-row-axis');
+  const colSel = document.getElementById('sel-col-axis');
+  const changed = changedId === 'sel-row-axis' ? rowSel : colSel;
+  const other = changedId === 'sel-row-axis' ? colSel : rowSel;
+
+  if (rowSel.value === colSel.value) {
+    const fallback = other.dataset.prev && other.dataset.prev !== changed.value
+      ? other.dataset.prev
+      : AXIS_OPTIONS.find(option => option !== changed.value);
+    other.value = fallback;
+  }
+
+  rowSel.dataset.prev = rowSel.value;
+  colSel.dataset.prev = colSel.value;
+  updateFilterStates();
+}
+function updateFilterStates() {
+  const axes = getAxisSelections();
+  Object.entries(AXIS_META).forEach(([axisKey, meta]) => {
+    const group = document.querySelector(`[data-filter-dim="${axisKey}"]`);
+    const select = document.getElementById(meta.filterId);
+    const disabled = axisKey === axes.row || axisKey === axes.col;
+    if (group) group.classList.toggle('is-disabled', disabled);
+    if (select) select.disabled = disabled;
+  });
+}
+function buildCellContext(rowAxis, rowEntry, colAxis, colEntry) {
+  const filters = getFilterValues();
+  return {
+    domain: rowAxis === 'domain' ? rowEntry.key : colAxis === 'domain' ? colEntry.key : filters.domain,
+    layer: rowAxis === 'layer' ? rowEntry.key : colAxis === 'layer' ? colEntry.key : filters.layer,
+    severity: rowAxis === 'severity' ? rowEntry.key : colAxis === 'severity' ? colEntry.key : filters.severity,
+    time: rowAxis === 'time' ? rowEntry.key : colAxis === 'time' ? colEntry.key : filters.time,
+  };
+}
 
 // === State ===================================================================
 
@@ -384,6 +537,9 @@ async function boot() {
 
     // Select most recent date (first in sorted list)
     dateSel.value = runsManifest.dates[0].date;
+    document.getElementById('sel-row-axis').dataset.prev = document.getElementById('sel-row-axis').value;
+    document.getElementById('sel-col-axis').dataset.prev = document.getElementById('sel-col-axis').value;
+    updateFilterStates();
 
     // Load data for selected date
     await loadDateData(runsManifest.dates[0].date);
@@ -481,12 +637,13 @@ function renderRunTitle() {
     return;
   }
 
+  const axes = getAxisSelections();
   const label = currentRun.label || dateLabel(currentRun.date);
   const modelCount = currentModels.length;
   const selectedCount = currentModels.filter(model => selectedModelIds.has(model.id)).length;
   const runType = modelCount === 1 ? 'Single-model run' : 'Multi-model comparison';
 
-  title.innerHTML = `${runType} <span class="date-badge">${label} <span class="model-count">${selectedCount}/${modelCount} selected</span></span>`;
+  title.innerHTML = `${runType} <span class="date-badge">${label} <span class="model-count">${selectedCount}/${modelCount} selected</span></span> <span class="date-badge">Rows: ${titleCaseAxis(axes.row)} <span class="model-count">Cols: ${titleCaseAxis(axes.col)}</span></span>`;
 }
 
 function renderLegend() {
@@ -509,21 +666,21 @@ function getVisibleModels() {
     .filter(({ model }) => selectedModelIds.has(model.id));
 }
 
-function renderAlignedCell(layer, domain, severity, time, variant, topN, visibleModels) {
+function renderAlignedCell(cellContext, variant, topN, visibleModels) {
   let anchorIdx = visibleModels[0]?.index ?? 0;
   let anchorLen = 0;
 
   visibleModels.forEach(({ index }) => {
-    const rankings = getRankings(index, layer, domain, severity, time, variant);
+    const rankings = getRankings(index, cellContext.layer, cellContext.domain, cellContext.severity, cellContext.time, variant);
     if (rankings.length > anchorLen) {
       anchorLen = rankings.length;
       anchorIdx = index;
     }
   });
 
-  const anchorRankings = getRankings(anchorIdx, layer, domain, severity, time, variant);
+  const anchorRankings = getRankings(anchorIdx, cellContext.layer, cellContext.domain, cellContext.severity, cellContext.time, variant);
   const sorted = [...anchorRankings].sort((a, b) => a.rank - b.rank).slice(0, topN);
-  const hasAnyData = visibleModels.some(({ index }) => getRankings(index, layer, domain, severity, time, variant).length > 0);
+  const hasAnyData = visibleModels.some(({ index }) => getRankings(index, cellContext.layer, cellContext.domain, cellContext.severity, cellContext.time, variant).length > 0);
 
   if (!hasAnyData) return '<div class="dg-empty">No data</div>';
 
@@ -531,7 +688,7 @@ function renderAlignedCell(layer, domain, severity, time, variant, topN, visible
   sorted.forEach((anchorEntry, entryIdx) => {
     html += `<div class="mm-entry">`;
     visibleModels.forEach(({ model, index }, visibleIdx) => {
-      const rankings = getRankings(index, layer, domain, severity, time, variant);
+      const rankings = getRankings(index, cellContext.layer, cellContext.domain, cellContext.severity, cellContext.time, variant);
       const matched = rankings.find(item => item.variable === anchorEntry.variable);
       const fallback = [...rankings].sort((a, b) => a.rank - b.rank)[entryIdx];
       const viewEntry = matched || fallback;
@@ -561,13 +718,13 @@ function renderAlignedCell(layer, domain, severity, time, variant, topN, visible
   return html;
 }
 
-function renderPerModelCell(layer, domain, severity, time, variant, topN, visibleModels) {
-  const hasAnyData = visibleModels.some(({ index }) => getRankings(index, layer, domain, severity, time, variant).length > 0);
+function renderPerModelCell(cellContext, variant, topN, visibleModels) {
+  const hasAnyData = visibleModels.some(({ index }) => getRankings(index, cellContext.layer, cellContext.domain, cellContext.severity, cellContext.time, variant).length > 0);
   if (!hasAnyData) return '<div class="dg-empty">No data</div>';
 
   let html = '';
   visibleModels.forEach(({ model, index }) => {
-    const rankings = [...getRankings(index, layer, domain, severity, time, variant)]
+    const rankings = [...getRankings(index, cellContext.layer, cellContext.domain, cellContext.severity, cellContext.time, variant)]
       .sort((a, b) => a.rank - b.rank)
       .slice(0, topN);
 
@@ -599,9 +756,7 @@ function renderPerModelCell(layer, domain, severity, time, variant, topN, visibl
 
 function renderGrid() {
   const container = document.getElementById('grid-container');
-  const domainFilter = document.getElementById('sel-domain').value;
-  const severity = document.getElementById('sel-severity').value;
-  const time = document.getElementById('sel-time').value;
+  const axes = getAxisSelections();
   const topN = parseInt(document.getElementById('sel-topn').value) || 10;
   const viewMode = document.getElementById('sel-viewmode').value;
   const variant = 'ALL';
@@ -612,21 +767,23 @@ function renderGrid() {
     return;
   }
 
-  const visibleDomains = domainFilter === 'ALL' ? DOMAINS : DOMAINS.filter(d => d === domainFilter);
+  const rowEntries = getAxisEntries(axes.row);
+  const colEntries = getAxisEntries(axes.col);
 
   let html = `<table class="domain-grid-table"><thead><tr>
-    <th>Domain</th>
-    ${LAYER_KEYS.map(l => `<th>${LAYER_INFO[l].title}</th>`).join('')}
+    <th>${AXIS_META[axes.row].title}</th>
+    ${colEntries.map(entry => `<th><div class="dg-domain">${entry.label}</div><div class="dg-domain-sub">${entry.sublabel || ''}</div></th>`).join('')}
   </tr></thead><tbody>`;
 
-  for (const domain of visibleDomains) {
-    html += `<tr><td><div class="dg-domain">${domain}</div><div class="dg-domain-sub">${DOMAIN_NAMES[domain] || domain}</div></td>`;
+  for (const rowEntry of rowEntries) {
+    html += `<tr><td><div class="dg-domain">${rowEntry.label}</div><div class="dg-domain-sub">${rowEntry.sublabel || ''}</div></td>`;
 
-    for (const layer of LAYER_KEYS) {
+    for (const colEntry of colEntries) {
+      const cellContext = buildCellContext(axes.row, rowEntry, axes.col, colEntry);
       html += `<td class="dg-cell">`;
       html += viewMode === 'per-model'
-        ? renderPerModelCell(layer, domain, severity, time, variant, topN, visibleModels)
-        : renderAlignedCell(layer, domain, severity, time, variant, topN, visibleModels);
+        ? renderPerModelCell(cellContext, variant, topN, visibleModels)
+        : renderAlignedCell(cellContext, variant, topN, visibleModels);
       html += `</td>`;
     }
     html += `</tr>`;
@@ -638,8 +795,19 @@ function renderGrid() {
 
 // === Events ==================================================================
 
-['sel-domain','sel-severity','sel-time','sel-topn','sel-viewmode'].forEach(id => {
-  document.getElementById(id)?.addEventListener('change', renderGrid);
+['sel-domain','sel-layer','sel-severity','sel-time','sel-topn','sel-viewmode','chk-axis-aggregate'].forEach(id => {
+  document.getElementById(id)?.addEventListener('change', () => {
+    renderRunTitle();
+    renderGrid();
+  });
+});
+
+['sel-row-axis','sel-col-axis'].forEach(id => {
+  document.getElementById(id)?.addEventListener('change', () => {
+    updateAxisSelectors(id);
+    renderRunTitle();
+    renderGrid();
+  });
 });
 
 document.getElementById('legend-bar')?.addEventListener('change', event => {
