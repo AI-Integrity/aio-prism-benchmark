@@ -26,6 +26,9 @@
       --model2: #34d399; --model2-bg: rgba(52,211,153,0.85);
       --model3: #a78bfa; --model3-bg: rgba(167,139,250,0.85);
       --model4: #fbbf24; --model4-bg: rgba(251,191,36,0.85);
+      --model5: #f472b6; --model5-bg: rgba(244,114,182,0.85);
+      --model6: #fb7185; --model6-bg: rgba(251,113,133,0.85);
+      --model7: #22d3ee; --model7-bg: rgba(34,211,238,0.85);
     }
 
     [data-theme="light"] {
@@ -47,6 +50,9 @@
       --model2: #047857; --model2-bg: rgba(4,120,87,0.85);
       --model3: #6d28d9; --model3-bg: rgba(109,40,217,0.85);
       --model4: #b45309; --model4-bg: rgba(180,83,9,0.85);
+      --model5: #be185d; --model5-bg: rgba(190,24,93,0.85);
+      --model6: #e11d48; --model6-bg: rgba(225,29,72,0.85);
+      --model7: #0f766e; --model7-bg: rgba(15,118,110,0.85);
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -304,7 +310,7 @@
 <script>
 // === Constants ===============================================================
 
-const MODEL_COLORS = ['--model1', '--model2', '--model3', '--model4'];
+const MODEL_COLORS = ['--model1', '--model2', '--model3', '--model4', '--model5', '--model6', '--model7'];
 
 const LAYER_KEYS = ['L4', 'L3', 'L2'];
 const DEFAULT_LAYER_FILE_MAP = { L4: 'rankings_L4L.json', L3: 'rankings_L3.json', L2: 'rankings_L2.json' };
@@ -328,6 +334,7 @@ function dateLabel(d) { return d.length === 8 ? `${d.slice(0,4)}-${d.slice(4,6)}
 let runsManifest = null;   // parsed runs.json
 let currentModels = [];    // models for current date: [{id, short, color}]
 let modelData = [];        // modelData[modelIdx][layer] = parsed JSON
+let currentRun = null;     // selected run metadata
 
 // === Load Manifest ===========================================================
 
@@ -376,6 +383,7 @@ async function loadDateData(dateKey) {
 
   const run = runsManifest.dates.find(r => r.date === dateKey);
   if (!run) return;
+  currentRun = run;
 
   // Set up current models
   currentModels = run.models.map((m, i) => ({
@@ -419,6 +427,7 @@ async function loadDateData(dateKey) {
     loadingArea.style.display = 'none';
     mainContent.style.display = '';
 
+    renderRunTitle();
     renderLegend();
     renderGrid();
   } catch (e) {
@@ -438,6 +447,20 @@ function getRankings(modelIdx, layer, domain, severity, time, variant) {
 }
 
 // === Legend ===================================================================
+
+function renderRunTitle() {
+  const title = document.getElementById('compare-title');
+  if (!currentRun) {
+    title.textContent = 'Unified Multi-Model Comparison';
+    return;
+  }
+
+  const label = currentRun.label || dateLabel(currentRun.date);
+  const modelCount = currentModels.length;
+  const runType = modelCount === 1 ? 'Single-model run' : 'Multi-model comparison';
+
+  title.innerHTML = `${runType} <span class="date-badge">${label} <span class="model-count">${modelCount} model${modelCount === 1 ? '' : 's'}</span></span>`;
+}
 
 function renderLegend() {
   const bar = document.getElementById('legend-bar');
