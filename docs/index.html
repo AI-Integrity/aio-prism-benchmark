@@ -145,58 +145,6 @@
 
     .dg-empty { font-size: 11px; color: var(--text3); font-style: italic; }
 
-    /* Analysis Report */
-    .report-section { padding-top: 32px; }
-    .report-section h2 { font-size: 18px; font-weight: 800; margin-bottom: 24px; }
-    .report-section h3 { font-size: 13px; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 12px; }
-    .report-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; margin-bottom: 16px; }
-    .report-card.red { background: var(--red-bg); border-color: var(--red-border); }
-    .report-card.amber { background: var(--amber-bg); border-color: var(--amber-border); }
-    .report-card.blue { background: var(--blue-bg); border-color: var(--blue-border); }
-    .report-card h4 { font-size: 13px; font-weight: 700; margin-bottom: 10px; }
-    .report-card.red h4 { color: var(--red); }
-    .report-card.amber h4 { color: var(--amber); }
-    .report-card.blue h4 { color: var(--blue); }
-    .report-card p, .report-card li { font-size: 13px; color: var(--text2); line-height: 1.7; }
-    .report-card ul { padding-left: 18px; }
-    .report-card li { margin-bottom: 6px; }
-
-    .div-bar-row { display: flex; align-items: center; gap: 12px; padding: 6px 0; }
-    .div-bar-label { width: 90px; flex-shrink: 0; }
-    .div-bar-label .domain-id { font-size: 12px; font-weight: 700; }
-    .div-bar-label .domain-name { font-size: 10px; color: var(--text3); }
-    .div-bar-track { flex: 1; height: 18px; background: var(--surface2); border-radius: 4px; overflow: hidden; }
-    .div-bar-fill { height: 100%; border-radius: 4px; transition: width 0.4s; }
-    .div-bar-fill.high { background: var(--red); }
-    .div-bar-fill.low { background: var(--green); }
-    .div-bar-fill.mid { background: var(--text3); }
-    .div-bar-value { width: 70px; text-align: right; font-size: 12px; font-weight: 600; flex-shrink: 0; }
-    .div-bar-badge { font-size: 10px; font-weight: 600; width: 50px; flex-shrink: 0; }
-    .div-bar-badge.high { color: var(--red); }
-    .div-bar-badge.low { color: var(--green); }
-
-    .inv-row { display: flex; align-items: center; gap: 8px; padding: 4px 0; font-size: 12px; }
-    .inv-domain { font-weight: 700; width: 40px; flex-shrink: 0; color: var(--amber); }
-    .inv-layer { width: 24px; flex-shrink: 0; color: var(--text3); }
-    .inv-var { flex: 1; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .inv-ranks { flex-shrink: 0; color: var(--text3); }
-
-    .vol-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 8px; }
-    .vol-item { font-size: 12px; }
-    .vol-item .vol-domain { font-weight: 700; }
-    .vol-item .vol-std { color: var(--text3); margin-left: 4px; }
-
-    /* Report filters */
-    .report-filters { display: flex; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; align-items: end; }
-    .report-filters .rf-group label { display: block; font-size: 10px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
-    .report-filters .rf-group select {
-      background: var(--surface2); border: 1px solid var(--border); border-radius: 6px;
-      color: var(--text); font-size: 12px; padding: 6px 28px 6px 10px; cursor: pointer; appearance: none;
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%238b90a8'/%3E%3C/svg%3E");
-      background-repeat: no-repeat; background-position: right 8px center; transition: border-color 0.15s;
-    }
-    .report-filters .rf-group select:focus { outline: none; border-color: var(--accent); }
-
     @media (max-width: 900px) {
       .domain-grid-table { display: block; overflow-x: auto; }
     }
@@ -340,8 +288,6 @@
     <!-- Grid table -->
     <div id="grid-container"></div>
 
-    <!-- Analysis Report -->
-    <div id="analysis-report"></div>
   </div>
 
 </div>
@@ -361,7 +307,7 @@
 const MODEL_COLORS = ['--model1', '--model2', '--model3', '--model4'];
 
 const LAYER_KEYS = ['L4', 'L3', 'L2'];
-const LAYER_FILE_MAP = { L4: 'rankings_L4L.json', L3: 'rankings_L3.json', L2: 'rankings_L2.json' };
+const DEFAULT_LAYER_FILE_MAP = { L4: 'rankings_L4L.json', L3: 'rankings_L3.json', L2: 'rankings_L2.json' };
 const LAYER_INFO = {
   L4: { title: 'L4 — Values', desc: 'What matters?' },
   L3: { title: 'L3 — Epistemic', desc: 'How do we know?' },
@@ -413,7 +359,6 @@ async function boot() {
     // Bind date change
     dateSel.addEventListener('change', async () => {
       document.getElementById('grid-container').innerHTML = '';
-      document.getElementById('analysis-report').innerHTML = '';
       document.getElementById('legend-bar').innerHTML = '<span class="legend-title">Loading...</span>';
       await loadDateData(dateSel.value);
     });
@@ -436,6 +381,7 @@ async function loadDateData(dateKey) {
   currentModels = run.models.map((m, i) => ({
     id: m.id,
     short: m.short,
+    path: m.path ?? m.id,
     color: MODEL_COLORS[i % MODEL_COLORS.length],
   }));
 
@@ -453,7 +399,9 @@ async function loadDateData(dateKey) {
 
     currentModels.forEach((model, mIdx) => {
       LAYER_KEYS.forEach(layer => {
-        const url = `data/runs/${dateKey}/${model.id}/${LAYER_FILE_MAP[layer]}`;
+        const layerFileMap = run.fileMap || DEFAULT_LAYER_FILE_MAP;
+        const modelPrefix = model.path ? `${model.path}/` : '';
+        const url = `data/runs/${dateKey}/${modelPrefix}${layerFileMap[layer]}`;
         promises.push(
           fetch(url).then(res => {
             if (!res.ok) throw new Error(`${model.short} ${layer}: HTTP ${res.status}`);
@@ -473,7 +421,6 @@ async function loadDateData(dateKey) {
 
     renderLegend();
     renderGrid();
-    renderAnalysisReport();
   } catch (e) {
     loadingArea.innerHTML = `<div class="state-msg"><div class="icon">!</div><p>Could not load data for ${dateLabel(dateKey)}.</p><p style="margin-top:8px;font-size:11px;color:var(--text3)">${e.message}</p></div>`;
     mainContent.style.display = '';
@@ -577,191 +524,6 @@ function renderGrid() {
 
   html += `</tbody></table>`;
   container.innerHTML = html;
-}
-
-// === Analysis Report =========================================================
-
-function analyzeVariantDivergence() {
-  const severity = document.getElementById('rpt-severity')?.value || 'ALL';
-  const time = document.getElementById('rpt-time')?.value || 'ALL';
-  const modelIdx = parseInt(document.getElementById('rpt-model')?.value) || 0;
-  const results = [];
-
-  for (const domain of DOMAINS) {
-    const layerDivs = {};
-    const inversions = [];
-    let maxStd = 0, maxStdVar = null;
-
-    for (const layer of LAYER_KEYS) {
-      const v1 = getRankings(modelIdx, layer, domain, severity, time, '1');
-      const v2 = getRankings(modelIdx, layer, domain, severity, time, '2');
-      const v3 = getRankings(modelIdx, layer, domain, severity, time, '3');
-
-      if (!v1.length && !v2.length && !v3.length) { layerDivs[layer] = 0; continue; }
-
-      const varMap = {};
-      for (const arr of [v1, v2, v3]) {
-        for (const e of arr) {
-          if (!varMap[e.variable]) varMap[e.variable] = { wr: [], rk: [] };
-          varMap[e.variable].wr.push(e.win_rate);
-          varMap[e.variable].rk.push(e.rank);
-        }
-      }
-
-      let sumStd = 0, count = 0;
-      for (const [v, data] of Object.entries(varMap)) {
-        if (data.wr.length < 2) continue;
-        const mean = data.wr.reduce((a,b) => a+b, 0) / data.wr.length;
-        const variance = data.wr.reduce((a,b) => a+(b-mean)**2, 0) / data.wr.length;
-        const std = Math.sqrt(variance);
-        sumStd += std; count++;
-        if (std > maxStd) { maxStd = std; maxStdVar = v; }
-        if (data.rk.length === 3) {
-          const minR = Math.min(...data.rk), maxR = Math.max(...data.rk);
-          if (minR <= 3 && maxR - minR >= 3) {
-            inversions.push({ layer, variable: v, ranks: data.rk, winRates: data.wr });
-          }
-        }
-      }
-      layerDivs[layer] = count > 0 ? sumStd / count : 0;
-    }
-
-    const avgDiv = Object.values(layerDivs).reduce((a,b) => a+b, 0) / LAYER_KEYS.length;
-    results.push({ domain, avgDivergence: avgDiv, layerDivergences: layerDivs, rankInversions: inversions, mostVolatileVar: maxStdVar, mostVolatileStd: maxStd });
-  }
-
-  results.sort((a,b) => b.avgDivergence - a.avgDivergence);
-  return results;
-}
-
-function renderAnalysisReport() {
-  const report = document.getElementById('analysis-report');
-  const modelIdx = parseInt(document.getElementById('rpt-model')?.value) || 0;
-  const divergences = analyzeVariantDivergence();
-  if (!divergences.length) { report.innerHTML = ''; return; }
-
-  const maxDiv = divergences[0];
-  const minDiv = divergences[divergences.length - 1];
-  const allInversions = divergences.flatMap(d => d.rankInversions.map(inv => ({ ...inv, domain: d.domain })));
-  const maxBarWidth = Math.max(...divergences.map(d => d.avgDivergence), 0.001);
-  const totalRecords = LAYER_KEYS.reduce((s,l) => s + (modelData[modelIdx]?.[l]?.meta?.valid_records || 0), 0);
-  const highDivDomains = divergences.filter(d => d.avgDivergence > divergences.reduce((s,x) => s + x.avgDivergence, 0) / divergences.length);
-
-  const globalTop = {};
-  for (const layer of LAYER_KEYS) {
-    const r = getRankings(modelIdx, layer, 'ALL', 'ALL', 'ALL', 'ALL');
-    if (r && r.length) globalTop[layer] = [...r].sort((a,b) => a.rank - b.rank)[0];
-  }
-
-  const modelShort = currentModels[modelIdx]?.short || 'Unknown';
-
-  let html = `<div class="report-section">
-    <h2>PRISM Analysis Report</h2>
-
-    <div class="report-filters">
-      <div class="rf-group"><label>Model</label>
-        <select id="rpt-model">
-          ${currentModels.map((m, i) => `<option value="${i}">${m.short}</option>`).join('')}
-        </select>
-      </div>
-      <div class="rf-group"><label>Severity</label>
-        <select id="rpt-severity">
-          <option value="ALL">All Severities</option>
-          <optgroup label="Individual"><option value="1-1">1-1 Individual / Reversible</option><option value="1-2">1-2 Individual / Partial</option><option value="1-3">1-3 Individual / Irreversible</option></optgroup>
-          <optgroup label="Relational"><option value="2-1">2-1 Relational / Reversible</option><option value="2-2">2-2 Relational / Partial</option><option value="2-3">2-3 Relational / Irreversible</option></optgroup>
-          <optgroup label="Group"><option value="3-1">3-1 Group / Reversible</option><option value="3-2">3-2 Group / Partial</option><option value="3-3">3-3 Group / Irreversible</option></optgroup>
-          <optgroup label="Societal"><option value="4-1">4-1 Societal / Reversible</option><option value="4-2">4-2 Societal / Partial</option><option value="4-3">4-3 Societal / Irreversible</option></optgroup>
-          <optgroup label="Global"><option value="5-1">5-1 Global / Reversible</option><option value="5-2">5-2 Global / Partial</option><option value="5-3">5-3 Global / Irreversible</option></optgroup>
-        </select>
-      </div>
-      <div class="rf-group"><label>Time Horizon</label>
-        <select id="rpt-time">
-          <option value="ALL">All Time Horizons</option>
-          <option value="1">Immediate (24 h)</option>
-          <option value="2">Short-term (1 yr)</option>
-          <option value="3">Long-term (10+ yr)</option>
-          <option value="4">Permanent / Generational</option>
-        </select>
-      </div>
-    </div>
-
-    <h3>1. Framing Sensitivity Analysis (Cross-Variant Divergence)</h3>
-    <p style="font-size:12px;color:var(--text2);margin-bottom:16px;">
-      Measures how much AI responses (win rates) vary when the same conflict is presented with 3 different framings (V1/V2/V3). Higher divergence = more sensitive to phrasing. Model: <strong>${modelShort}</strong>
-    </p>
-    <div class="report-card">`;
-
-  divergences.forEach(d => {
-    const barPct = maxBarWidth > 0 ? (d.avgDivergence / maxBarWidth) * 100 : 0;
-    const isHigh = d === maxDiv, isLow = d === minDiv;
-    const cls = isHigh ? 'high' : isLow ? 'low' : 'mid';
-    html += `<div class="div-bar-row">
-      <div class="div-bar-label"><div class="domain-id">${d.domain}</div><div class="domain-name">${DOMAIN_NAMES[d.domain]||d.domain}</div></div>
-      <div class="div-bar-track"><div class="div-bar-fill ${cls}" style="width:${Math.max(barPct,2)}%"></div></div>
-      <div class="div-bar-value" style="color:var(--${isHigh?'red':isLow?'green':'text2'})">${(d.avgDivergence*100).toFixed(2)}%p</div>
-      <div class="div-bar-badge ${cls}">${isHigh?'Highest':isLow?'Lowest':''}</div>
-    </div>`;
-  });
-  html += `</div>`;
-
-  if (allInversions.length > 0) {
-    html += `<div class="report-card amber">
-      <h4>Rank Inversions Detected (${allInversions.length} cases)</h4>
-      <p style="margin-bottom:10px;">Cases where a top-3 variable drops 3+ ranks in another framing.</p>`;
-    allInversions.slice(0, 10).forEach(inv => {
-      html += `<div class="inv-row"><span class="inv-domain">${inv.domain}</span><span class="inv-layer">${inv.layer}</span><span class="inv-var">${displayName(inv.variable)}</span><span class="inv-ranks">Rank: ${inv.ranks.join(' / ')}</span></div>`;
-    });
-    if (allInversions.length > 10) html += `<p style="font-size:11px;color:var(--text3);margin-top:6px;">+${allInversions.length-10} more</p>`;
-    html += `</div>`;
-  }
-
-  const volatiles = divergences.filter(d => d.mostVolatileVar);
-  if (volatiles.length) {
-    html += `<div class="report-card"><h4 style="color:var(--text)">Most Volatile Variable per Domain</h4><div class="vol-grid">`;
-    volatiles.forEach(d => {
-      html += `<div class="vol-item"><span class="vol-domain">${d.domain}:</span> ${displayName(d.mostVolatileVar)} <span class="vol-std">(+/-${(d.mostVolatileStd*100).toFixed(1)}%p)</span></div>`;
-    });
-    html += `</div></div>`;
-  }
-
-  html += `<h3>2. Implications &amp; Issues</h3>
-    <div class="report-card red">
-      <h4>Core Issue: Value Judgment Instability from Framing Effects</h4>
-      <p>When the same value conflict is rephrased differently, the ${maxDiv.domain} (${DOMAIN_NAMES[maxDiv.domain]}) domain shows an average ${(maxDiv.avgDivergence*100).toFixed(2)}%p win-rate divergence for <strong>${modelShort}</strong>.</p>
-      ${allInversions.length > 0 ? `<p style="margin-top:8px;">${allInversions.length} rank inversions were detected — cases where simply reframing the question causes the AI to prioritize entirely different values.</p>` : ''}
-    </div>
-
-    <div class="report-card blue">
-      <h4>Domain-Specific Findings</h4>
-      <ul>
-        <li>Most sensitive domains: <strong>${highDivDomains.map(d=>`${d.domain} (${DOMAIN_NAMES[d.domain]})`).join(', ')}</strong></li>
-        <li>Most stable domain: <strong>${minDiv.domain} (${DOMAIN_NAMES[minDiv.domain]})</strong> — at ${(minDiv.avgDivergence*100).toFixed(2)}%p divergence</li>
-        ${globalTop.L4 ? `<li>"${displayName(globalTop.L4.variable)}" ranks #1 overall in L4 (${pct(globalTop.L4.win_rate)})</li>` : ''}
-      </ul>
-    </div>
-
-    <div class="report-card">
-      <h4 style="color:var(--text)">Structural Implications</h4>
-      <ul>
-        <li>Framing effects are a classic human cognitive bias — their presence in AI suggests the model has learned and reproduces human biases.</li>
-        <li>Multi-framing cross-validation (the PRISM approach) reveals instabilities that single-prompt evaluation misses.</li>
-        <li>In high-stakes domains (medical/defense/legal), AI decisions must be validated for consistency across multiple framings.</li>
-        ${totalRecords > 0 ? `<li>${totalRecords.toLocaleString()} forced-choice responses x 3-framing cross-analysis enables 3x reliability validation.</li>` : ''}
-      </ul>
-    </div>
-  </div>`;
-
-  report.innerHTML = html;
-
-  ['rpt-model','rpt-severity','rpt-time'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.addEventListener('change', () => {
-      const saved = {};
-      ['rpt-model','rpt-severity','rpt-time'].forEach(sid => { const sel = document.getElementById(sid); if (sel) saved[sid] = sel.value; });
-      renderAnalysisReport();
-      Object.entries(saved).forEach(([sid, val]) => { const sel = document.getElementById(sid); if (sel) sel.value = val; });
-    });
-  });
 }
 
 // === Events ==================================================================

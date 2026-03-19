@@ -1,12 +1,37 @@
 {
   "dates": [
     {
+      "date": "20260319",
+      "label": "2026-03-19",
+      "models": [
+        { "id": "claude-haiku-4-5", "short": "Claude Haiku 4.5" },
+        { "id": "deepseek-v3.2", "short": "DeepSeek V3.2" },
+        { "id": "gemini-3-flash-lite", "short": "Gemini 3 Flash Lite" },
+        { "id": "gpt-5-nano", "short": "GPT-5 Nano" },
+        { "id": "grok-4.1-fast", "short": "Grok 4.1 Fast" },
+        { "id": "mimo-v2-flash", "short": "Mimo V2 Flash" },
+        { "id": "trinity-large", "short": "Trinity Large" }
+      ]
+    },
+    {
       "date": "20260316",
       "label": "2026-03-16",
       "models": [
         { "id": "claude-haiku-4-5-20251001", "short": "Claude Haiku 4.5" },
         { "id": "deepseek-v3.2", "short": "DeepSeek V3.2" },
         { "id": "grok-4.1-fast", "short": "Grok 4.1 Fast" }
+      ]
+    },
+    {
+      "date": "20260305",
+      "label": "2026-03-05",
+      "fileMap": {
+        "L4": "rankings_L4.json",
+        "L3": "rankings_L3.json",
+        "L2": "rankings_L2.json"
+      },
+      "models": [
+        { "id": "legacy-run", "short": "Legacy Run", "path": "" }
       ]
     }
   ]
