@@ -155,6 +155,23 @@
     .domain-grid-table .dg-domain { font-size: 13px; font-weight: 700; white-space: nowrap; }
     .domain-grid-table .dg-domain-sub { font-size: 10px; color: var(--text3); }
     .domain-grid-table .dg-cell { min-width: 200px; }
+    .domain-grid-table.is-compact th { padding: 10px 10px; font-size: 11px; }
+    .domain-grid-table.is-compact td { padding: 8px 10px; }
+    .domain-grid-table.is-compact .dg-cell { min-width: 160px; }
+    .domain-grid-table.is-compact .mm-name,
+    .domain-grid-table.is-compact .mm-pct,
+    .domain-grid-table.is-compact .mm-rank { font-size: 9px; }
+    .domain-grid-table.is-compact .mm-bar-track { width: 52px; }
+    .domain-grid-table.is-ultra-compact th { padding: 8px 8px; font-size: 10px; }
+    .domain-grid-table.is-ultra-compact td { padding: 6px 8px; }
+    .domain-grid-table.is-ultra-compact .dg-cell { min-width: 132px; }
+    .domain-grid-table.is-ultra-compact .dg-domain { font-size: 11px; }
+    .domain-grid-table.is-ultra-compact .dg-domain-sub { font-size: 9px; }
+    .domain-grid-table.is-ultra-compact .mm-row { gap: 4px; }
+    .domain-grid-table.is-ultra-compact .mm-name,
+    .domain-grid-table.is-ultra-compact .mm-pct,
+    .domain-grid-table.is-ultra-compact .mm-rank { font-size: 8px; }
+    .domain-grid-table.is-ultra-compact .mm-bar-track { width: 40px; }
 
     /* Multi-model entry */
     .mm-entry { margin-bottom: 8px; }
@@ -263,8 +280,14 @@
       </div>
       <div class="filter-group">
         <label class="filter-check">
-          <input type="checkbox" id="chk-axis-aggregate">
-          <span>Include Aggregate</span>
+          <input type="checkbox" id="chk-row-aggregate">
+          <span>Row Aggregate</span>
+        </label>
+      </div>
+      <div class="filter-group">
+        <label class="filter-check">
+          <input type="checkbox" id="chk-col-aggregate">
+          <span>Column Aggregate</span>
         </label>
       </div>
       <div class="filter-separator"></div>
@@ -460,14 +483,88 @@ function getFilterValues() {
     time: document.getElementById('sel-time').value,
   };
 }
-function includeAxisAggregate() {
-  return document.getElementById('chk-axis-aggregate').checked;
+function includeRowAggregate() {
+  return document.getElementById('chk-row-aggregate').checked;
 }
-function getAxisEntries(axisKey) {
+function includeColAggregate() {
+  return document.getElementById('chk-col-aggregate').checked;
+}
+function getAxisEntries(axisKey, includeAggregate) {
   const meta = AXIS_META[axisKey];
   const base = meta.getEntries();
-  if (!meta.allowsAggregate || !includeAxisAggregate()) return base;
+  if (!meta.allowsAggregate || !includeAggregate) return base;
   return [meta.aggregateEntry, ...base];
+}
+function getUrlState() {
+  const params = new URLSearchParams(window.location.search);
+  return {
+    date: params.get('date'),
+    row: params.get('row'),
+    col: params.get('col'),
+    rowAgg: params.get('rowAgg') === '1',
+    colAgg: params.get('colAgg') === '1',
+    domain: params.get('domain'),
+    layer: params.get('layer'),
+    severity: params.get('severity'),
+    time: params.get('time'),
+    topN: params.get('topN'),
+    view: params.get('view'),
+    models: params.get('models'),
+  };
+}
+function setSelectIfValid(id, value) {
+  if (!value) return;
+  const select = document.getElementById(id);
+  if (!select) return;
+  const hasOption = Array.from(select.options).some(option => option.value === value);
+  if (hasOption) select.value = value;
+}
+function applyUrlStateBeforeLoad() {
+  const state = getUrlState();
+  setSelectIfValid('sel-row-axis', state.row);
+  setSelectIfValid('sel-col-axis', state.col);
+  updateAxisSelectors('sel-row-axis');
+  setSelectIfValid('sel-domain', state.domain);
+  setSelectIfValid('sel-layer', state.layer);
+  setSelectIfValid('sel-severity', state.severity);
+  setSelectIfValid('sel-time', state.time);
+  setSelectIfValid('sel-topn', state.topN);
+  setSelectIfValid('sel-viewmode', state.view);
+  document.getElementById('chk-row-aggregate').checked = state.rowAgg;
+  document.getElementById('chk-col-aggregate').checked = state.colAgg;
+  return state;
+}
+function applyModelSelectionFromUrl() {
+  const state = getUrlState();
+  if (!state.models) return;
+  const requested = new Set(state.models.split(',').filter(Boolean));
+  const valid = currentModels.filter(model => requested.has(model.id)).map(model => model.id);
+  if (valid.length) selectedModelIds = new Set(valid);
+}
+function syncUrlState() {
+  const axes = getAxisSelections();
+  const filters = getFilterValues();
+  const params = new URLSearchParams();
+  params.set('date', document.getElementById('sel-date').value);
+  params.set('row', axes.row);
+  params.set('col', axes.col);
+  if (includeRowAggregate()) params.set('rowAgg', '1');
+  if (includeColAggregate()) params.set('colAgg', '1');
+  params.set('domain', filters.domain);
+  params.set('layer', filters.layer);
+  params.set('severity', filters.severity);
+  params.set('time', filters.time);
+  params.set('topN', document.getElementById('sel-topn').value);
+  params.set('view', document.getElementById('sel-viewmode').value);
+  const visibleIds = currentModels.filter(model => selectedModelIds.has(model.id)).map(model => model.id);
+  if (visibleIds.length && visibleIds.length !== currentModels.length) params.set('models', visibleIds.join(','));
+  const next = `${window.location.pathname}?${params.toString()}`;
+  window.history.replaceState({}, '', next);
+}
+function getTableDensityClass(colCount, rowCount, viewMode, modelCount) {
+  if (colCount >= 7 || rowCount >= 10 || (viewMode === 'per-model' && modelCount >= 5)) return 'is-ultra-compact';
+  if (colCount >= 5 || rowCount >= 7 || (viewMode === 'per-model' && modelCount >= 3)) return 'is-compact';
+  return '';
 }
 function updateAxisSelectors(changedId) {
   const rowSel = document.getElementById('sel-row-axis');
@@ -539,10 +636,14 @@ async function boot() {
     dateSel.value = runsManifest.dates[0].date;
     document.getElementById('sel-row-axis').dataset.prev = document.getElementById('sel-row-axis').value;
     document.getElementById('sel-col-axis').dataset.prev = document.getElementById('sel-col-axis').value;
+    const initialState = applyUrlStateBeforeLoad();
+    if (initialState.date && runsManifest.dates.some(run => run.date === initialState.date)) {
+      dateSel.value = initialState.date;
+    }
     updateFilterStates();
 
     // Load data for selected date
-    await loadDateData(runsManifest.dates[0].date);
+    await loadDateData(dateSel.value);
 
     // Bind date change
     dateSel.addEventListener('change', async () => {
@@ -574,6 +675,7 @@ async function loadDateData(dateKey) {
     color: MODEL_COLORS[i % MODEL_COLORS.length],
   }));
   selectedModelIds = new Set(currentModels.map(model => model.id));
+  applyModelSelectionFromUrl();
 
   modelData = currentModels.map(() => ({}));
 
@@ -612,6 +714,7 @@ async function loadDateData(dateKey) {
     renderRunTitle();
     renderLegend();
     renderGrid();
+    syncUrlState();
   } catch (e) {
     loadingArea.innerHTML = `<div class="state-msg"><div class="icon">!</div><p>Could not load data for ${dateLabel(dateKey)}.</p><p style="margin-top:8px;font-size:11px;color:var(--text3)">${e.message}</p></div>`;
     mainContent.style.display = '';
@@ -767,10 +870,11 @@ function renderGrid() {
     return;
   }
 
-  const rowEntries = getAxisEntries(axes.row);
-  const colEntries = getAxisEntries(axes.col);
+  const rowEntries = getAxisEntries(axes.row, includeRowAggregate());
+  const colEntries = getAxisEntries(axes.col, includeColAggregate());
+  const densityClass = getTableDensityClass(colEntries.length, rowEntries.length, viewMode, visibleModels.length);
 
-  let html = `<table class="domain-grid-table"><thead><tr>
+  let html = `<table class="domain-grid-table ${densityClass}"><thead><tr>
     <th>${AXIS_META[axes.row].title}</th>
     ${colEntries.map(entry => `<th><div class="dg-domain">${entry.label}</div><div class="dg-domain-sub">${entry.sublabel || ''}</div></th>`).join('')}
   </tr></thead><tbody>`;
@@ -795,10 +899,11 @@ function renderGrid() {
 
 // === Events ==================================================================
 
-['sel-domain','sel-layer','sel-severity','sel-time','sel-topn','sel-viewmode','chk-axis-aggregate'].forEach(id => {
+['sel-domain','sel-layer','sel-severity','sel-time','sel-topn','sel-viewmode','chk-row-aggregate','chk-col-aggregate'].forEach(id => {
   document.getElementById(id)?.addEventListener('change', () => {
     renderRunTitle();
     renderGrid();
+    syncUrlState();
   });
 });
 
@@ -807,6 +912,7 @@ function renderGrid() {
     updateAxisSelectors(id);
     renderRunTitle();
     renderGrid();
+    syncUrlState();
   });
 });
 
@@ -820,6 +926,7 @@ document.getElementById('legend-bar')?.addEventListener('change', event => {
   renderRunTitle();
   renderLegend();
   renderGrid();
+  syncUrlState();
 });
 
 // === Theme ===================================================================
