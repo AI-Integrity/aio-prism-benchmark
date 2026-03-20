@@ -82,9 +82,26 @@
 
     /* Filters */
     .filter-bar {
-      display: flex; gap: 16px; flex-wrap: wrap; align-items: center;
+      display: flex; gap: 14px; flex-wrap: wrap; align-items: stretch;
       margin-bottom: 20px; padding: 14px 18px;
       background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+    }
+    .filter-section {
+      display: flex; flex-wrap: wrap; gap: 12px 14px; align-items: center;
+      padding: 10px 12px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      min-width: 0;
+    }
+    .filter-section.is-primary { flex: 1 1 420px; }
+    .filter-section.is-secondary { flex: 1 1 520px; }
+    .filter-section.is-actions { flex: 1 1 100%; }
+    .filter-section-title {
+      width: 100%;
+      font-size: 10px; font-weight: 700; color: var(--text3);
+      text-transform: uppercase; letter-spacing: 0.7px;
+      margin-bottom: 2px;
     }
     .filter-group { display: flex; align-items: center; gap: 8px; }
     .filter-group label { font-size: 11px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: 0.5px; }
@@ -97,7 +114,6 @@
     .filter-group select:disabled { opacity: 0.55; cursor: not-allowed; }
     .filter-group select:focus { outline: none; border-color: var(--accent); }
     .filter-group.is-disabled label { opacity: 0.7; }
-    .filter-separator { width: 1px; height: 24px; background: var(--border); margin: 0 4px; }
     .filter-check {
       display: inline-flex; align-items: center; gap: 8px;
       font-size: 12px; color: var(--text2); user-select: none;
@@ -105,8 +121,7 @@
     .filter-check input { margin: 0; accent-color: var(--accent); }
     .filter-actions {
       display: flex; gap: 8px; flex-wrap: wrap; align-items: center;
-      width: 100%; padding-top: 6px; margin-top: 2px;
-      border-top: 1px solid var(--border);
+      width: 100%;
     }
     .filter-button {
       border: 1px solid var(--border); background: var(--surface2); color: var(--text);
@@ -172,22 +187,24 @@
     .domain-grid-table .dg-domain-sub { font-size: 10px; color: var(--text3); }
     .domain-grid-table .dg-cell { min-width: 200px; }
     .domain-grid-table.is-compact th { padding: 10px 10px; font-size: 11px; }
-    .domain-grid-table.is-compact td { padding: 8px 10px; }
-    .domain-grid-table.is-compact .dg-cell { min-width: 160px; }
+    .domain-grid-table.is-compact td { padding: 9px 10px; }
+    .domain-grid-table.is-compact .dg-cell { min-width: 176px; }
     .domain-grid-table.is-compact .mm-name,
     .domain-grid-table.is-compact .mm-pct,
-    .domain-grid-table.is-compact .mm-rank { font-size: 9px; }
-    .domain-grid-table.is-compact .mm-bar-track { width: 52px; }
+    .domain-grid-table.is-compact .mm-rank,
+    .domain-grid-table.is-compact .mm-model-tag { font-size: 10px; }
+    .domain-grid-table.is-compact .mm-bar-track { width: 56px; }
     .domain-grid-table.is-ultra-compact th { padding: 8px 8px; font-size: 10px; }
-    .domain-grid-table.is-ultra-compact td { padding: 6px 8px; }
-    .domain-grid-table.is-ultra-compact .dg-cell { min-width: 132px; }
+    .domain-grid-table.is-ultra-compact td { padding: 8px 8px; }
+    .domain-grid-table.is-ultra-compact .dg-cell { min-width: 150px; }
     .domain-grid-table.is-ultra-compact .dg-domain { font-size: 11px; }
     .domain-grid-table.is-ultra-compact .dg-domain-sub { font-size: 9px; }
     .domain-grid-table.is-ultra-compact .mm-row { gap: 4px; }
     .domain-grid-table.is-ultra-compact .mm-name,
     .domain-grid-table.is-ultra-compact .mm-pct,
-    .domain-grid-table.is-ultra-compact .mm-rank { font-size: 8px; }
-    .domain-grid-table.is-ultra-compact .mm-bar-track { width: 40px; }
+    .domain-grid-table.is-ultra-compact .mm-rank,
+    .domain-grid-table.is-ultra-compact .mm-model-tag { font-size: 9px; }
+    .domain-grid-table.is-ultra-compact .mm-bar-track { width: 44px; }
 
     /* Multi-model entry */
     .mm-entry { margin-bottom: 8px; }
@@ -200,7 +217,11 @@
     [data-theme="light"] .mm-rank.r3 { color: #92400e; }
     .mm-name { font-size: 10px; flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--text); }
     .mm-spacer-rank { width: 14px; flex-shrink: 0; }
-    .mm-spacer-name { flex: 1; min-width: 0; }
+    .mm-model-tag {
+      min-width: 38px; flex-shrink: 0;
+      font-size: 10px; font-weight: 700; letter-spacing: 0.2px;
+      color: var(--text2); text-transform: uppercase;
+    }
     .mm-bar-track { width: 64px; height: 4px; background: var(--surface2); border-radius: 2px; overflow: hidden; flex-shrink: 0; }
     .mm-bar-fill { height: 100%; border-radius: 2px; }
     .mm-pct { width: 42px; text-align: right; font-size: 10px; font-weight: 600; color: var(--text2); flex-shrink: 0; }
@@ -235,6 +256,11 @@
     @media (max-width: 640px) {
       header { padding: 14px 16px; }
       .container { padding: 16px 12px; }
+      .filter-section { padding: 10px; }
+      .filter-group { width: 100%; justify-content: space-between; }
+      .filter-group select { width: min(210px, 55vw); }
+      .filter-actions { gap: 6px; }
+      .filter-button { padding: 7px 9px; }
     }
   </style>
 </head>
@@ -271,126 +297,133 @@
 
     <!-- Filters -->
     <div class="filter-bar">
-      <div class="filter-group">
-        <label>Date</label>
-        <select id="sel-date"></select>
+      <div class="filter-section is-primary">
+        <div class="filter-section-title">Structure</div>
+        <div class="filter-group">
+          <label>Date</label>
+          <select id="sel-date"></select>
+        </div>
+        <div class="filter-group">
+          <label>Rows</label>
+          <select id="sel-row-axis">
+            <option value="domain" selected>Domain</option>
+            <option value="layer">Layer</option>
+            <option value="severity">Severity</option>
+            <option value="time">Time Horizon</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label>Columns</label>
+          <select id="sel-col-axis">
+            <option value="domain">Domain</option>
+            <option value="layer" selected>Layer</option>
+            <option value="severity">Severity</option>
+            <option value="time">Time Horizon</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label>View Mode</label>
+          <select id="sel-viewmode">
+            <option value="aligned" selected>Aligned</option>
+            <option value="per-model">By Model</option>
+          </select>
+        </div>
       </div>
-      <div class="filter-separator"></div>
-      <div class="filter-group">
-        <label>Rows</label>
-        <select id="sel-row-axis">
-          <option value="domain" selected>Domain</option>
-          <option value="layer">Layer</option>
-          <option value="severity">Severity</option>
-          <option value="time">Time Horizon</option>
-        </select>
+      <div class="filter-section is-secondary">
+        <div class="filter-section-title">Filters</div>
+        <div class="filter-group">
+          <label class="filter-check">
+            <input type="checkbox" id="chk-row-aggregate">
+            <span>Row Aggregate</span>
+          </label>
+        </div>
+        <div class="filter-group">
+          <label class="filter-check">
+            <input type="checkbox" id="chk-col-aggregate">
+            <span>Column Aggregate</span>
+          </label>
+        </div>
+        <div class="filter-group" data-filter-dim="domain">
+          <label>Domain</label>
+          <select id="sel-domain">
+            <option value="ALL">All Domains</option>
+            <option value="MED">MED - Medical</option>
+            <option value="BIZ">BIZ - Business</option>
+            <option value="TECH">TECH - Technology</option>
+            <option value="EDU">EDU - Education</option>
+            <option value="LAW">LAW - Legal</option>
+            <option value="DEF">DEF - Defense</option>
+            <option value="CARE">CARE - Care</option>
+          </select>
+        </div>
+        <div class="filter-group" data-filter-dim="layer">
+          <label>Layer</label>
+          <select id="sel-layer">
+            <option value="L4" selected>L4 - Values</option>
+            <option value="L3">L3 - Epistemic</option>
+            <option value="L2">L2 - Source</option>
+          </select>
+        </div>
+        <div class="filter-group" data-filter-dim="severity">
+          <label>Severity</label>
+          <select id="sel-severity">
+            <option value="ALL">All Severities</option>
+            <optgroup label="Individual">
+              <option value="1-1">1-1 Individual / Reversible</option>
+              <option value="1-2">1-2 Individual / Partial</option>
+              <option value="1-3">1-3 Individual / Irreversible</option>
+            </optgroup>
+            <optgroup label="Relational">
+              <option value="2-1">2-1 Relational / Reversible</option>
+              <option value="2-2">2-2 Relational / Partial</option>
+              <option value="2-3">2-3 Relational / Irreversible</option>
+            </optgroup>
+            <optgroup label="Group">
+              <option value="3-1">3-1 Group / Reversible</option>
+              <option value="3-2">3-2 Group / Partial</option>
+              <option value="3-3">3-3 Group / Irreversible</option>
+            </optgroup>
+            <optgroup label="Societal">
+              <option value="4-1">4-1 Societal / Reversible</option>
+              <option value="4-2">4-2 Societal / Partial</option>
+              <option value="4-3">4-3 Societal / Irreversible</option>
+            </optgroup>
+            <optgroup label="Global">
+              <option value="5-1">5-1 Global / Reversible</option>
+              <option value="5-2">5-2 Global / Partial</option>
+              <option value="5-3">5-3 Global / Irreversible</option>
+            </optgroup>
+          </select>
+        </div>
+        <div class="filter-group" data-filter-dim="time">
+          <label>Time Horizon</label>
+          <select id="sel-time">
+            <option value="ALL">All Time Horizons</option>
+            <option value="1">Immediate</option>
+            <option value="2">Short-term</option>
+            <option value="3">Long-term</option>
+            <option value="4">Permanent / Generational</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label>Top N</label>
+          <select id="sel-topn">
+            <option value="5">Top 5</option>
+            <option value="10" selected>Top 10</option>
+            <option value="15">Top 15</option>
+          </select>
+        </div>
       </div>
-      <div class="filter-group">
-        <label>Columns</label>
-        <select id="sel-col-axis">
-          <option value="domain">Domain</option>
-          <option value="layer" selected>Layer</option>
-          <option value="severity">Severity</option>
-          <option value="time">Time Horizon</option>
-        </select>
-      </div>
-      <div class="filter-group">
-        <label class="filter-check">
-          <input type="checkbox" id="chk-row-aggregate">
-          <span>Row Aggregate</span>
-        </label>
-      </div>
-      <div class="filter-group">
-        <label class="filter-check">
-          <input type="checkbox" id="chk-col-aggregate">
-          <span>Column Aggregate</span>
-        </label>
-      </div>
-      <div class="filter-separator"></div>
-      <div class="filter-group" data-filter-dim="domain">
-        <label>Domain</label>
-        <select id="sel-domain">
-          <option value="ALL">All Domains</option>
-          <option value="MED">MED - Medical</option>
-          <option value="BIZ">BIZ - Business</option>
-          <option value="TECH">TECH - Technology</option>
-          <option value="EDU">EDU - Education</option>
-          <option value="LAW">LAW - Legal</option>
-          <option value="DEF">DEF - Defense</option>
-          <option value="CARE">CARE - Care</option>
-        </select>
-      </div>
-      <div class="filter-group" data-filter-dim="layer">
-        <label>Layer</label>
-        <select id="sel-layer">
-          <option value="L4" selected>L4 - Values</option>
-          <option value="L3">L3 - Epistemic</option>
-          <option value="L2">L2 - Source</option>
-        </select>
-      </div>
-      <div class="filter-group" data-filter-dim="severity">
-        <label>Severity</label>
-        <select id="sel-severity">
-          <option value="ALL">All Severities</option>
-          <optgroup label="Individual">
-            <option value="1-1">1-1 Individual / Reversible</option>
-            <option value="1-2">1-2 Individual / Partial</option>
-            <option value="1-3">1-3 Individual / Irreversible</option>
-          </optgroup>
-          <optgroup label="Relational">
-            <option value="2-1">2-1 Relational / Reversible</option>
-            <option value="2-2">2-2 Relational / Partial</option>
-            <option value="2-3">2-3 Relational / Irreversible</option>
-          </optgroup>
-          <optgroup label="Group">
-            <option value="3-1">3-1 Group / Reversible</option>
-            <option value="3-2">3-2 Group / Partial</option>
-            <option value="3-3">3-3 Group / Irreversible</option>
-          </optgroup>
-          <optgroup label="Societal">
-            <option value="4-1">4-1 Societal / Reversible</option>
-            <option value="4-2">4-2 Societal / Partial</option>
-            <option value="4-3">4-3 Societal / Irreversible</option>
-          </optgroup>
-          <optgroup label="Global">
-            <option value="5-1">5-1 Global / Reversible</option>
-            <option value="5-2">5-2 Global / Partial</option>
-            <option value="5-3">5-3 Global / Irreversible</option>
-          </optgroup>
-        </select>
-      </div>
-      <div class="filter-group" data-filter-dim="time">
-        <label>Time Horizon</label>
-        <select id="sel-time">
-          <option value="ALL">All Time Horizons</option>
-          <option value="1">Immediate</option>
-          <option value="2">Short-term</option>
-          <option value="3">Long-term</option>
-          <option value="4">Permanent / Generational</option>
-        </select>
-      </div>
-      <div class="filter-group">
-        <label>Top N</label>
-        <select id="sel-topn">
-          <option value="5">Top 5</option>
-          <option value="10" selected>Top 10</option>
-          <option value="15">Top 15</option>
-        </select>
-      </div>
-      <div class="filter-group">
-        <label>View Mode</label>
-        <select id="sel-viewmode">
-          <option value="aligned" selected>Aligned</option>
-          <option value="per-model">By Model</option>
-        </select>
-      </div>
-      <div class="filter-actions">
-        <span class="preset-label">Presets</span>
-        <button type="button" class="filter-button" data-preset="domain-layer">Domain x Layer</button>
-        <button type="button" class="filter-button" data-preset="severity-layer">Severity x Layer</button>
-        <button type="button" class="filter-button" data-preset="time-layer">Time x Layer</button>
-        <button type="button" class="filter-button" data-preset="domain-severity">Domain x Severity</button>
-        <button type="button" class="filter-button is-secondary" id="btn-reset-view">Reset View</button>
+      <div class="filter-section is-actions">
+        <div class="filter-section-title">Shortcuts</div>
+        <div class="filter-actions">
+          <span class="preset-label">Presets</span>
+          <button type="button" class="filter-button" data-preset="domain-layer">Domain x Layer</button>
+          <button type="button" class="filter-button" data-preset="severity-layer">Severity x Layer</button>
+          <button type="button" class="filter-button" data-preset="time-layer">Time x Layer</button>
+          <button type="button" class="filter-button" data-preset="domain-severity">Domain x Severity</button>
+          <button type="button" class="filter-button is-secondary" id="btn-reset-view">Reset View</button>
+        </div>
       </div>
     </div>
 
@@ -507,6 +540,15 @@ const AXIS_META = {
 
 function displayName(v) {
   return v.replace(/^[SE]\d+-/,'').replace(/-/g,' ').replace(/\b\w/g, c => c.toUpperCase());
+}
+function shortModelTag(name) {
+  return name
+    .split(/\s+/)
+    .filter(Boolean)
+    .map(part => part[0])
+    .join('')
+    .slice(0, 4)
+    .toUpperCase();
 }
 function pct(n) { return (n * 100).toFixed(1) + '%'; }
 function dateLabel(d) { return d.length === 8 ? `${d.slice(0,4)}-${d.slice(4,6)}-${d.slice(6,8)}` : d; }
@@ -868,13 +910,15 @@ function renderAlignedCell(cellContext, variant, topN, visibleModels) {
         html += `<div class="mm-row">
           <span class="mm-rank ${rcls}">${entryIdx + 1}</span>
           <span class="mm-name" title="${anchorEntry.variable}">${displayName(anchorEntry.variable)}</span>
+          <span class="mm-model-tag" title="${model.short}">${shortModelTag(model.short)}</span>
           <div class="mm-bar-track"><div class="mm-bar-fill" style="width:${Math.min(winRate * 100, 100)}%;background:${barColor}"></div></div>
           <span class="mm-pct">${viewEntry ? pct(winRate) : '<span class="mm-dash">\u2014</span>'}</span>
         </div>`;
       } else {
         html += `<div class="mm-row">
           <span class="mm-spacer-rank"></span>
-          <span class="mm-spacer-name"></span>
+          <span class="mm-name" title="${anchorEntry.variable}">${displayName(anchorEntry.variable)}</span>
+          <span class="mm-model-tag" title="${model.short}">${shortModelTag(model.short)}</span>
           <div class="mm-bar-track"><div class="mm-bar-fill" style="width:${Math.min(winRate * 100, 100)}%;background:${barColor}"></div></div>
           <span class="mm-pct">${viewEntry ? pct(winRate) : '<span class="mm-dash">\u2014</span>'}</span>
         </div>`;
