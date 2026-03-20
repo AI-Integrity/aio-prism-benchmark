@@ -103,6 +103,22 @@
       font-size: 12px; color: var(--text2); user-select: none;
     }
     .filter-check input { margin: 0; accent-color: var(--accent); }
+    .filter-actions {
+      display: flex; gap: 8px; flex-wrap: wrap; align-items: center;
+      width: 100%; padding-top: 6px; margin-top: 2px;
+      border-top: 1px solid var(--border);
+    }
+    .filter-button {
+      border: 1px solid var(--border); background: var(--surface2); color: var(--text);
+      font-size: 11px; font-weight: 600; padding: 7px 10px; border-radius: 999px; cursor: pointer;
+      transition: border-color 0.15s, background 0.15s, color 0.15s;
+    }
+    .filter-button:hover { border-color: var(--accent); color: var(--accent); }
+    .filter-button.is-secondary { color: var(--text2); }
+    .preset-label {
+      font-size: 11px; font-weight: 700; color: var(--text3); text-transform: uppercase; letter-spacing: 0.5px;
+      margin-right: 2px;
+    }
 
     /* Date badge */
     .date-badge {
@@ -368,6 +384,14 @@
           <option value="per-model">By Model</option>
         </select>
       </div>
+      <div class="filter-actions">
+        <span class="preset-label">Presets</span>
+        <button type="button" class="filter-button" data-preset="domain-layer">Domain x Layer</button>
+        <button type="button" class="filter-button" data-preset="severity-layer">Severity x Layer</button>
+        <button type="button" class="filter-button" data-preset="time-layer">Time x Layer</button>
+        <button type="button" class="filter-button" data-preset="domain-severity">Domain x Severity</button>
+        <button type="button" class="filter-button is-secondary" id="btn-reset-view">Reset View</button>
+      </div>
     </div>
 
     <!-- Legend -->
@@ -433,6 +457,24 @@ const TIME_OPTIONS = [
   { key: '4', label: 'Permanent / Generational', sublabel: 'Generational horizon' },
 ];
 const AXIS_OPTIONS = ['domain', 'layer', 'severity', 'time'];
+const DEFAULT_VIEW_STATE = {
+  row: 'domain',
+  col: 'layer',
+  rowAgg: false,
+  colAgg: false,
+  domain: 'ALL',
+  layer: 'L4',
+  severity: 'ALL',
+  time: 'ALL',
+  topN: '10',
+  view: 'aligned',
+};
+const PRESET_CONFIGS = {
+  'domain-layer': { row: 'domain', col: 'layer' },
+  'severity-layer': { row: 'severity', col: 'layer' },
+  'time-layer': { row: 'time', col: 'layer' },
+  'domain-severity': { row: 'domain', col: 'severity' },
+};
 const AXIS_META = {
   domain: {
     title: 'Domain',
@@ -497,19 +539,20 @@ function getAxisEntries(axisKey, includeAggregate) {
 }
 function getUrlState() {
   const params = new URLSearchParams(window.location.search);
+  const pick = (...keys) => keys.map(key => params.get(key)).find(value => value !== null);
   return {
-    date: params.get('date'),
-    row: params.get('row'),
-    col: params.get('col'),
-    rowAgg: params.get('rowAgg') === '1',
-    colAgg: params.get('colAgg') === '1',
-    domain: params.get('domain'),
-    layer: params.get('layer'),
-    severity: params.get('severity'),
-    time: params.get('time'),
-    topN: params.get('topN'),
-    view: params.get('view'),
-    models: params.get('models'),
+    date: pick('d', 'date'),
+    row: pick('r', 'row'),
+    col: pick('c', 'col'),
+    rowAgg: pick('ra', 'rowAgg') === '1',
+    colAgg: pick('ca', 'colAgg') === '1',
+    domain: pick('dm', 'domain'),
+    layer: pick('l', 'layer'),
+    severity: pick('s', 'severity'),
+    time: pick('t', 'time'),
+    topN: pick('n', 'topN'),
+    view: pick('v', 'view'),
+    models: pick('m', 'models'),
   };
 }
 function setSelectIfValid(id, value) {
@@ -521,17 +564,7 @@ function setSelectIfValid(id, value) {
 }
 function applyUrlStateBeforeLoad() {
   const state = getUrlState();
-  setSelectIfValid('sel-row-axis', state.row);
-  setSelectIfValid('sel-col-axis', state.col);
-  updateAxisSelectors('sel-row-axis');
-  setSelectIfValid('sel-domain', state.domain);
-  setSelectIfValid('sel-layer', state.layer);
-  setSelectIfValid('sel-severity', state.severity);
-  setSelectIfValid('sel-time', state.time);
-  setSelectIfValid('sel-topn', state.topN);
-  setSelectIfValid('sel-viewmode', state.view);
-  document.getElementById('chk-row-aggregate').checked = state.rowAgg;
-  document.getElementById('chk-col-aggregate').checked = state.colAgg;
+  setViewerState(state);
   return state;
 }
 function applyModelSelectionFromUrl() {
@@ -545,21 +578,53 @@ function syncUrlState() {
   const axes = getAxisSelections();
   const filters = getFilterValues();
   const params = new URLSearchParams();
-  params.set('date', document.getElementById('sel-date').value);
-  params.set('row', axes.row);
-  params.set('col', axes.col);
-  if (includeRowAggregate()) params.set('rowAgg', '1');
-  if (includeColAggregate()) params.set('colAgg', '1');
-  params.set('domain', filters.domain);
-  params.set('layer', filters.layer);
-  params.set('severity', filters.severity);
-  params.set('time', filters.time);
-  params.set('topN', document.getElementById('sel-topn').value);
-  params.set('view', document.getElementById('sel-viewmode').value);
+  params.set('d', document.getElementById('sel-date').value);
+  params.set('r', axes.row);
+  params.set('c', axes.col);
+  if (includeRowAggregate()) params.set('ra', '1');
+  if (includeColAggregate()) params.set('ca', '1');
+  params.set('dm', filters.domain);
+  params.set('l', filters.layer);
+  params.set('s', filters.severity);
+  params.set('t', filters.time);
+  params.set('n', document.getElementById('sel-topn').value);
+  params.set('v', document.getElementById('sel-viewmode').value);
   const visibleIds = currentModels.filter(model => selectedModelIds.has(model.id)).map(model => model.id);
-  if (visibleIds.length && visibleIds.length !== currentModels.length) params.set('models', visibleIds.join(','));
+  if (visibleIds.length && visibleIds.length !== currentModels.length) params.set('m', visibleIds.join(','));
   const next = `${window.location.pathname}?${params.toString()}`;
   window.history.replaceState({}, '', next);
+}
+function setViewerState(partialState = {}) {
+  const nextState = { ...DEFAULT_VIEW_STATE, ...partialState };
+  setSelectIfValid('sel-row-axis', nextState.row);
+  setSelectIfValid('sel-col-axis', nextState.col);
+  updateAxisSelectors('sel-row-axis');
+  setSelectIfValid('sel-domain', nextState.domain);
+  setSelectIfValid('sel-layer', nextState.layer);
+  setSelectIfValid('sel-severity', nextState.severity);
+  setSelectIfValid('sel-time', nextState.time);
+  setSelectIfValid('sel-topn', nextState.topN);
+  setSelectIfValid('sel-viewmode', nextState.view);
+  document.getElementById('chk-row-aggregate').checked = !!nextState.rowAgg;
+  document.getElementById('chk-col-aggregate').checked = !!nextState.colAgg;
+  updateFilterStates();
+}
+function resetView() {
+  setViewerState();
+  selectedModelIds = new Set(currentModels.map(model => model.id));
+  renderRunTitle();
+  renderLegend();
+  renderGrid();
+  syncUrlState();
+}
+function applyPreset(presetKey) {
+  const preset = PRESET_CONFIGS[presetKey];
+  if (!preset) return;
+  setViewerState({ ...preset, rowAgg: false, colAgg: false, view: 'aligned' });
+  renderRunTitle();
+  renderLegend();
+  renderGrid();
+  syncUrlState();
 }
 function getTableDensityClass(colCount, rowCount, viewMode, modelCount) {
   if (colCount >= 7 || rowCount >= 10 || (viewMode === 'per-model' && modelCount >= 5)) return 'is-ultra-compact';
@@ -927,6 +992,19 @@ document.getElementById('legend-bar')?.addEventListener('change', event => {
   renderLegend();
   renderGrid();
   syncUrlState();
+});
+
+document.querySelector('.filter-actions')?.addEventListener('click', event => {
+  const button = event.target.closest('button');
+  if (!button) return;
+
+  if (button.id === 'btn-reset-view') {
+    resetView();
+    return;
+  }
+
+  const presetKey = button.dataset.preset;
+  if (presetKey) applyPreset(presetKey);
 });
 
 // === Theme ===================================================================
